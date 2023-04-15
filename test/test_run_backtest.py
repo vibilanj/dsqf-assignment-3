@@ -7,6 +7,7 @@ import unittest
 from src.stocks_fetcher import StocksFetcher, DATE_FORMAT
 from src.run_backtest import RunBacktest, MOMENTUM, REVERSAL, CLOSE_PRICE
 from random import randint
+import pandas as pd
 
 sys.path.append("/.../src")
 

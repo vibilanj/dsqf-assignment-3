@@ -66,3 +66,6 @@ Screenshot of pytest results of the project:
 Screenshot of code coverage report of the project:
 
 ![screenshot-2023-03-19-23:41:27](https://user-images.githubusercontent.com/61618719/226187895-1c058e7f-38e4-4844-a583-741fe47d822a.png)
+
+
+python backtest_two_signal_strategy.py --tickers AMZN,NFLX,SPY,WMT --b 20220831 --e 20230331 --initial_aum 10000 --strategy1_type M --days1 100 --top_pct 10 --strategy2_type M --days2 100
