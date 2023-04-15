@@ -4,8 +4,7 @@ and organise user input.
 """
 import sys
 import unittest
-# from src.input_data import InputData, get_args, DATE_TODAY
-from input_data import InputData, DATE_TODAY, get_args
+from src.input_data import InputData, get_args
 
 sys.path.append("/.../src")
 

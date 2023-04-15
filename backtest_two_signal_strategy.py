@@ -1,6 +1,6 @@
 """
 YSC4228: Data Science in Quantitative Finance
-Group Assignment 1
+Group Assignment 3
 Members:
 - Alan Matthew Anggara
 - Marcellinus Jerricho
@@ -8,10 +8,12 @@ Members:
 - Nahian Chowdhury Nileema
 
 Fetches daily stock information of specified stock tickers within
-a given time frame and backtests simple momentum and reversal
-strategies. Calculates various statistics based on the backtest
-simulation to provides an analysis of the strategy over the given
-time period.
+a given time frame and backtests a linear combination of two signals
+for a monthly strategy. Calculates various statistics based on the
+backtest simulation to provides an analysis of the strategy over the
+given time period.
+
+CHANGE ARGUMENT PASSING
 """
 import sys
 from src.input_data import InputData
