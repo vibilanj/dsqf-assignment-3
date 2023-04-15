@@ -4,6 +4,7 @@ This module is responsible for running the backtest simulation.
 import pandas as pd
 from math import ceil
 from typing import Dict, List, Tuple
+from sklearn.linear_model import LinearRegression
 
 # Constants
 MOMENTUM = "M"
@@ -19,11 +20,12 @@ DIVIDENDS_DF = "dividends"
 CLOSE_PRICE = "Close"
 DIVIDENDS = "Dividends"
 
-# Training Data Constants
+# Model Constants
 STOCK = "stock"
 STRATEGY1_RETURN = "strategy1_return"
 STRATEGY2_RETURN = "strategy2_return"
 ACTUAL_RETURN = "actual_return"
+PREDICTED_RETURN = "predicted_return"
 
 class RunBacktest:
   """
@@ -168,6 +170,63 @@ class RunBacktest:
     
     training_data_df = pd.DataFrame(training_data_block, columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN, ACTUAL_RETURN])
     self.model_training_data = pd.concat([self.model_training_data, training_data_df], ignore_index=True)
+
+  def fit_model(self) -> LinearRegression:
+    """
+    _summary_ TODO
+
+    Returns:
+        LinearRegression: _description_
+    """
+    X = self.model_training_data[[STRATEGY1_RETURN, STRATEGY2_RETURN]]
+    y = self.model_training_data[ACTUAL_RETURN]
+    
+    model = LinearRegression()
+    model.fit(X, y)
+    return model
+  
+  def predict_returns(self, 
+    date_index: int) -> pd.DataFrame:
+    """
+    _summary_ TODO
+
+    Args:
+        date_index (int): _description_
+
+    Returns:
+        pd.DataFrame: _description_
+    """
+    prediction_features = []
+    stock_list = list(self.stocks_data.keys())
+    for stock in stock_list:
+      strategy1_return = self.get_feature(stock, self.strategy1, self.days1, date_index)
+      strategy2_return = self.get_feature(stock, self.strategy2, self.days2, date_index)
+      prediction_features.append([stock, strategy1_return, strategy2_return])
+    prediction_features_df = pd.Dateframe(prediction_features, columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN])
+
+    model = self.fit_model()    
+    X_new = prediction_features_df[[STRATEGY1_RETURN, STRATEGY2_RETURN]]
+    y_pred = pd.Series(model.predict(X_new), name=PREDICTED_RETURN)
+    predicted_returns = pd.concat([prediction_features_df[STOCK], y_pred], axis=1)
+    return predicted_returns
+  
+  def select_stocks_to_buy(self,
+    date_index: int) -> List[str]:
+    """
+    _summary_ TODO
+
+    Args:
+        date_index (int): _description_
+        top_pct (int): _description_
+
+    Returns:
+        List[str]: _description_
+    """
+    stocks = list(self.stocks_data.keys())
+    n_stocks = ceil(len(stocks) * (self.top_pct / 100))
+    predicted_returns = self.predict_returns(date_index)
+    sorted_predicted_returns = predicted_returns.sort_values(PREDICTED_RETURN)
+    return list(sorted_predicted_returns[STOCK][:n_stocks])
 
 
   def calc_portfolio(self,
