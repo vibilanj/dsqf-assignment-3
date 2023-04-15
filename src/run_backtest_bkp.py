@@ -19,12 +19,6 @@ DIVIDENDS_DF = "dividends"
 CLOSE_PRICE = "Close"
 DIVIDENDS = "Dividends"
 
-# Training Data Constants
-STOCK = "stock"
-STRATEGY1_RETURN = "strategy1_return"
-STRATEGY2_RETURN = "strategy2_return"
-ACTUAL_RETURN = "actual_return"
-
 class RunBacktest:
   """
   Defines the RunBacktest class which runs the backtest based on 
@@ -35,10 +29,8 @@ class RunBacktest:
     stocks_data: Dict[str, pd.DataFrame],
     initial_aum: int,
     beginning_date: int,
-    strategy1: str,
-    strategy2: str,
-    days1: int,
-    days2: int,
+    days: int,
+    strategy: str,
     top_pct: int):
     """
     This method initialises the RunBacktest class.
@@ -52,15 +44,12 @@ class RunBacktest:
         of stock returns.
       strategy (str): The backtesting strategy, either Momentum or Reversal.
       top_pct (int): The percentage of stocks to pick for the portfolio.
-      TODO
     """
-    self.stocks_data: Dict[str, pd.DataFrame] = stocks_data
+    self.stocks_data: pd.DataFrame = stocks_data
     self.initial_aum: int = initial_aum
     self.beginning_date: str = beginning_date
-    self.strategy1: str = strategy1
-    self.strategy2: str = strategy2
-    self.days1: int = days1
-    self.days2: int = days2
+    self.days: int = days
+    self.strategy: str = strategy
     self.top_pct: int = top_pct
 
     """
@@ -73,102 +62,57 @@ class RunBacktest:
       a record of previous portfolios. Each element is a portfolio.
     monthly_ic (pd.DataFrame): The dataframe to store the monthly 
       cumulative information coefficient of the portfolio.
-    TODO
     """
     self.portfolio_performance: pd.DataFrame = pd.DataFrame()
     self.portfolio: List[Tuple[str, float]] = []
     self.portfolio_record: List[List[Tuple[str, float]]] = []
     self.monthly_ic: pd.DataFrame = pd.DataFrame()
-    self.model_training_data: pd.DataFrame = pd.DataFrame(columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN, ACTUAL_RETURN])
-    self.model_statistics_record: pd.DataFrame = pd.DataFrame()
 
   def get_month_end_indexes_from_b(self) -> List[int]:
     """
     List[int]: Returns the indexes of the month end dates starting
-      from one month before the beginning date.
+      from the beginning date.
     """
     datetime_indexes = list(self.stocks_data.values())[0].index.to_list()
-    b_timestamp = pd.to_datetime(self.beginning_date, format=DATE_FORMAT) 
+    b_timestamp = pd.to_datetime(self.beginning_date, format=DATE_FORMAT)
     month_end_indexes = []
-    first_index_after_b = None
 
     for idx, datetime in enumerate(datetime_indexes[:-1]):
-      if datetime.month != datetime_indexes[idx + 1].month:
+      if datetime.month != datetime_indexes[idx + 1].month \
+        and datetime_indexes[idx].tz_localize(None) > b_timestamp:
         month_end_indexes.append(idx)
-        if first_index_after_b is None and\
-          datetime_indexes[idx].tz_localize(None) > b_timestamp:
-          first_index_after_b = idx
 
-    return month_end_indexes[idx - 1:]
-  
-  def get_feature(self, 
-    stock: str,
-    strategy: str,
-    days: int,
-    date_index: int) -> float:
+    return month_end_indexes
+
+  def calc_stocks_to_buy(self, date_index: int) -> List[str]:
     """
-    _summary_ TODO
+    Calculates which stocks should be bought based on the backtest 
+    strategy at a given date.
 
     Args:
-        ticker (str): _description_
-        strategy (str): _description_
-        days (int): _description_
-        date_index (int): _description_
+      date_index (int): The index of the date at which the stocks are 
+        bought.
 
     Returns:
-        float: _description_
+      List[str]: Returns a list containing the stock tickers to
+        be bought.
     """
-    is_momentum = strategy == MOMENTUM
+    stocks = list(self.stocks_data.keys())
+    stocks_returns = []
+    is_momentum = self.strategy == MOMENTUM
     date_index -= MOMENTUM_GAP * is_momentum
 
-    history = self.stocks_data[stock]
-    end_close = history.iloc[date_index][CLOSE_PRICE]
-    start_close = history.iloc[date_index - days][CLOSE_PRICE]
-    return (end_close - start_close) / start_close * 100
-  
-  def get_label(self,
-    stock: str,
-    date_index: int) -> float:
-    """
-    _summary_ TODO
+    for stock in stocks:
+      history = self.stocks_data[stock]
+      end_close = history.iloc[date_index][CLOSE_PRICE]
+      start_close = history.iloc[date_index - self.days][CLOSE_PRICE]
+      pct_change = (end_close - start_close) / start_close * 100
+      stocks_returns.append((stock, pct_change))
 
-    Args:
-        stock (str): _description_
-        date_index (int): _description_
-
-    Returns:
-        float: _description_
-    """
-    month_end_indexes = self.get_month_end_indexes_from_b()
-    previous_month_index = month_end_indexes[month_end_indexes.index(date_index) - 1]
-    
-    history = self.stocks_data[stock]
-    end_close = history.iloc[date_index][CLOSE_PRICE]
-    start_close = history.iloc[previous_month_index][CLOSE_PRICE]
-    return (end_close - start_close) / start_close * 100 
-
-  def get_monthly_training_data(self,
-    date_index: int) -> None:
-    """
-    _summary_ TODO
-
-    Args:
-        date_index (int): _description_
-    """
-    month_end_indexes = self.get_month_end_indexes_from_b()
-    previous_month_index = month_end_indexes[month_end_indexes.index(date_index) - 1]
-
-    training_data_block = []
-    stock_list = list(self.stocks_data.keys())
-    for stock in stock_list:
-      strategy1_return = self.get_feature(stock, self.strategy1, self.days1, previous_month_index)
-      strategy2_return = self.get_feature(stock, self.strategy2, self.days2, previous_month_index)
-      actual_return = self.get_label(stock, date_index)
-      training_data_block.append([stock, strategy1_return, strategy2_return, actual_return])
-    
-    training_data_df = pd.DataFrame(training_data_block, columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN, ACTUAL_RETURN])
-    self.model_training_data = pd.concat([self.model_training_data, training_data_df], ignore_index=True)
-
+    stocks_returns.sort(key=lambda x: x[1], reverse=is_momentum)
+    n_stocks = ceil(len(stocks) * (self.top_pct / 100))
+    stocks_to_buy = [stock for stock, _ in stocks_returns[:n_stocks]]
+    return stocks_to_buy
 
   def calc_portfolio(self,
     stocks_to_buy: List[str],
@@ -245,6 +189,40 @@ class RunBacktest:
       total_dividends += amount * dividends
     return total_dividends
 
+  def fill_up_portfolio_performance(self) -> None:
+    """
+    None: Simulates backtesting based on the user-defined information
+      and strategy and fills up the dataframe of portfolio performance 
+      with the calculated AUM and dividends for each day in the specified 
+      period.
+    """
+    self.init_portfolio_performance()
+    month_end_indexes = self.get_month_end_indexes_from_b()
+    for day_idx in range(month_end_indexes[0], \
+                         len(list(self.stocks_data.values())[0].index)):
+      if day_idx in month_end_indexes:
+        stocks_to_buy = self.calc_stocks_to_buy(day_idx)
+        previous_aum = self.portfolio_performance.iloc[day_idx - 1][AUM]
+        self.portfolio = self.calc_portfolio(stocks_to_buy,
+                                             previous_aum,
+                                             day_idx)
+        self.portfolio_record.append(self.portfolio)
+
+      self.portfolio_performance.at[day_idx, AUM] = self.calc_aum(day_idx)
+      self.portfolio_performance.at[day_idx, DIVIDENDS_DF] = \
+        self.portfolio_performance.at[day_idx - 1, DIVIDENDS_DF] \
+          + self.calc_dividends(day_idx)
+
+    datetime_indexes = self.portfolio_performance[DATETIME].to_list()
+    b_idx = None
+    for idx, datetime in enumerate(datetime_indexes):
+      if datetime.tz_localize(None) >= \
+        pd.to_datetime(self.beginning_date, format=DATE_FORMAT):
+        b_idx = idx
+        break
+    self.portfolio_performance = \
+      self.portfolio_performance[b_idx:].reset_index(drop=True)
+
   def calc_ic(self) -> None:
     """
     None: Simulates backtesting based on the user-defined information
@@ -252,7 +230,7 @@ class RunBacktest:
       information coefficient for each month end day in the specified 
       period.
     """
-    month_end_indexes = self.get_month_end_indexes_from_b()[1:]
+    month_end_indexes = self.get_month_end_indexes_from_b()
     self.monthly_ic[DATETIME] = \
       list(self.stocks_data.values())[0].index[month_end_indexes[:-1]]
     self.monthly_ic[IC] = [0 for _ in range(len(month_end_indexes[:-1]))]
