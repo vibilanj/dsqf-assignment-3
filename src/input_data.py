@@ -77,8 +77,10 @@ class InputData:
       b (int): The user input of beginning date.
       e (int): The user input of ending date.
       intial_aum (int): The user input of initial AUM.
-      strategy_type (str): The user input of strategy type.
-      days (int): The user input of number of days to compute returns.
+      strategy1_type (str): The user input of strategy 1 type.
+      strategy2_type (str): The user input of strategy 2 type.
+      days1 (int): The user input of number of days for strategy 1.
+      days2 (int): The user input of number of days for strategy 2.
       top_pct (int): The user input of percentage of stocks to pick.
     """
     if tickers == -1:
