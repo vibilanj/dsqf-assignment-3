@@ -1,9 +1,9 @@
 """
 This module is responsible for getting, validating and organizing user input.
 """
+import argparse
 from datetime import datetime
 from typing import List
-import argparse
 
 # Constants
 DATETIME_FORMAT = "%Y%m%d"

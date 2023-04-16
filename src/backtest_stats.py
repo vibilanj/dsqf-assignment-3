@@ -1,9 +1,10 @@
 """
 This module is responsible for the backtest statistics.
 """
-import pandas as pd
 from math import sqrt
 from typing import List
+
+import pandas as pd
 
 # Constants
 DATETIME_STR_FORMAT = "%d/%m/%Y"
@@ -41,7 +42,9 @@ class BacktestStats:
       monthly_ic (pd.Dataframe): The dataframe containing the monthly
         information coefficient information calculated during the 
         backtest simulation
-      TODO
+      model_statistics (pd.Dataframe): The dataframe containing the
+        model statistics information calculated during the backtest
+        simulation.
     """
     self.portfolio_performance: pd.DataFrame = portfolio_performance
     self.monthly_ic: pd.DataFrame = monthly_ic
@@ -52,7 +55,8 @@ class BacktestStats:
       beginning trading day.
     ending_trading_date (pd.Timestamp): The timestamp of the 
       ending trading day.
-    TODO
+    latest_model_statistics (List[float]): The model statistics
+      of the latest linear regression model.
     """
     self.beginning_trading_date: pd.Timestamp = \
       self.portfolio_performance[DATETIME][0]
@@ -185,25 +189,29 @@ class BacktestStats:
 
   def get_strategy1_coefficient(self) -> float:
     """
-    float: TODO
+    float: Returns the linear regression coefficient of the
+      training feature corresponding to the first strategy.
     """
     return self.latest_model_statistics[STRATEGY1_COEFF_IDX]
 
   def get_strategy2_coefficient(self) -> float:
     """
-    float: TODO
+    float: Returns the linear regression coefficient of the
+      training feature corresponding to the second strategy.
     """
     return self.latest_model_statistics[STRATEGY2_COEFF_IDX]
 
   def get_strategy1_t_value(self) -> float:
     """
-    float: TODO
+    float: Returns the linear regression t-value of the
+      training feature corresponding to the first strategy.
     """
     return self.latest_model_statistics[STRATEGY1_T_IDX]
 
   def get_strategy2_t_value(self) -> float:
     """
-    float: TODO
+    float: Returns the linear regression t-value of the
+      training feature corresponding to the second strategy.
     """
     return self.latest_model_statistics[STRATEGY2_T_IDX]
 
@@ -277,5 +285,4 @@ class BacktestStats:
       ylabel="Cumulative IC").get_figure()
     fig.savefig(path)
     fig.clf()
-
 

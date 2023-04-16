@@ -1,10 +1,11 @@
 """
 This module is responsible for fetching the stocks data.
 """
-import yfinance as yf
-import pandas as pd
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import Dict, List
+
+import pandas as pd
+import yfinance as yf
 
 # Constants
 DATE_FORMAT = "%Y%m%d"

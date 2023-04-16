@@ -4,7 +4,8 @@ This module is responsible for testing the functions that fetch stock data.
 import sys
 import unittest
 from datetime import datetime
-from src.stocks_fetcher import StocksFetcher, DATE_FORMAT
+
+from src.stocks_fetcher import DATE_FORMAT, StocksFetcher
 
 sys.path.append("/.../src")
 
