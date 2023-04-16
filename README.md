@@ -1,17 +1,5 @@
 # Assignment 3 - Alan, Vibilan, Jerri, Nahian
 
-## TODO next
-- [x] Change argparse to include `strategy1_type` and `strategy2_type`.
-- [x] Change argparse to include `days1` and `days2`.
-- [ ] Create table with features and labels and a way to store it.
-- [ ] Fit a multiple linear regression model 
-- [ ] Re-compute features using the current month.
-- [ ] Get a single score for each stock.
-- [ ] Select stocks during portfolio rebalance time.
-- [ ] In the report, include the coefficients of the linear regression and respectice t-values.
-- [ ] Add tests
-- [ ] Finalise README
-
 ## Setting up virtual environment (recommended)
 
 1. Run `python3 -m venv .venv`.
@@ -35,7 +23,7 @@ To backtest a linear combination of 1) momentum strategy with 60 days, and 2) re
 
 To backtest a linear combination of 1) reversal strategy with 10 days, and 2) momentum strategy with 40 days, with an initial AUM of 10000, and on the top 20% of the stock universe containing AAPL, TSLA, LMT, BA, GOOG, AMZN, NVDA, META, WMT, MCD from June 1, 2022 to today run the following: 
 
-* `python backtest_strategy.py --tickers AAPL,TSLA,GOOG,META,NFLX --b 20220601 --initial_aum 10000 --strategy1_type R --days1 10 --strategy2_type M --days2 40 --top_pct 20`
+* `python backtest_strategy.py --tickers AAPL,TSLA,LMT,BA,GOOG,AMZN,NVDA,META,WMT,MCD --b 20220601 --initial_aum 10000 --strategy1_type R --days1 10 --strategy2_type M --days2 40 --top_pct 20`
 
 ### Note
 
@@ -55,17 +43,16 @@ To see the code coverage report, run the following command:
 ### Project Accomplishments
 
 1. Produces the correct analytics and plot
-2. Code coverage of the project is 98%
+2. Code coverage of the project is 99%
 3. Functions have been tested for multiple scenarios
 4. Functions have been correctly typed
 
 Screenshot of pytest results of the project:
 
-![screenshot-2023-03-19-23:41:04](https://user-images.githubusercontent.com/61618719/226187908-5d4cf8ce-a03e-4e5f-9016-61e4567ea493.png)
+TODO
 
 Screenshot of code coverage report of the project:
 
-![screenshot-2023-03-19-23:41:27](https://user-images.githubusercontent.com/61618719/226187895-1c058e7f-38e4-4844-a583-741fe47d822a.png)
+TODO
 
-
-python backtest_two_signal_strategy.py --tickers AMZN,NFLX,SPY,WMT --b 20220831 --e 20230331 --initial_aum 10000 --strategy1_type M --days1 100 --top_pct 10 --strategy2_type M --days2 100
+python -i backtest_two_signal_strategy.py --tickers NFLX,SPY,AMZN,WMT --b 20230101 --e 20230410 --initial_aum 10000 --strategy1_type M --days1 50 --strategy2_type R --days2 5 --top_pct 50 
