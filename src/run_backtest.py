@@ -269,7 +269,38 @@ class RunBacktest:
       [self.initial_aum for _ in range(len(datetime_indexes))]
     self.portfolio_performance[DIVIDENDS_DF] = \
       [0 for _ in range(len(datetime_indexes))]
+  
+  def fill_up_portfolio_performance(self) -> None:
+    self.init_portfolio_performance()
+    month_end_indexes = self.get_month_end_indexes_from_b()[1:]
+    for date_index in range(month_end_indexes[0], \
+                            len(list(self.stocks_data.values())[0].index)):
+      # updating portfolio performance by each row
+      self.portfolio_performance.at[date_index, AUM] = self.calc_aum(date_index)
+      self.portfolio_performance.at[date_index, DIVIDENDS_DF] = \
+        self.portfolio_performance.at[date_index - 1, DIVIDENDS_DF] \
+          + self.calc_dividends(date_index)
+      
+      # rebalance and store new portfolio
+      if date_index in month_end_indexes:
+        stocks_to_buy = self.select_stocks_to_buy(date_index)
+        self.portfolio = self.calc_portfolio(stocks_to_buy,
+                                             self.portfolio_performance.iloc[date_index][AUM],
+                                             date_index)
+        self.portfolio_record.append(self.portfolio)
+    
+    # cut portfolio performance to only start from beginning date
+    datetime_indexes = self.portfolio_performance[DATETIME].to_list()
+    b_idx = None
+    for idx, datetime in enumerate(datetime_indexes):
+      if datetime.tz_localize(None) >= \
+        pd.to_datetime(self.beginning_date, format=DATE_FORMAT):
+        b_idx = idx
+        break
+    self.portfolio_performance = \
+      self.portfolio_performance[b_idx:].reset_index(drop=True)
 
+      
   def calc_aum(self, date_index: int) -> float:
     """
     Calculates the assets under management amount for a given date.
