@@ -37,8 +37,7 @@ class StocksFetcher:
       pd.Dataframe: Returns a dataframe containing the stock data.
     """
     res = yf.Ticker(ticker_symbol).history(start=dt_start, end=dt_end)
-    if res.empty:
-      return pd.DataFrame()
+    assert not res.empty
     return res
 
   def fetch_stocks_data(self,

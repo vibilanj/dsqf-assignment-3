@@ -2,7 +2,7 @@
 This module is responsible for getting, validating and organizing user input.
 """
 from datetime import datetime
-from typing import List, Tuple
+from typing import List
 import argparse
 
 # Constants

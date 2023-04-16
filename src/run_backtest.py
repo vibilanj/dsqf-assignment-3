@@ -217,7 +217,7 @@ class RunBacktest:
                                              STRATEGY2_RETURN,
                                              ACTUAL_RETURN])
     self.model_training_data = \
-      pd.concat([self.model_training_data, training_data_df], 
+      pd.concat([self.model_training_data, training_data_df],
                 ignore_index=True)
 
   def store_model_statistics(self,
@@ -268,7 +268,7 @@ class RunBacktest:
     self.store_model_statistics(x, y, model)
     return model
 
-  def predict_returns(self, 
+  def predict_returns(self,
     date_index: int) -> pd.DataFrame:
     """
     _summary_ TODO
@@ -293,13 +293,14 @@ class RunBacktest:
         self.days2,
         date_index)
       prediction_features.append([stock, strategy1_return, strategy2_return])
+
     prediction_features_df = pd.DataFrame(prediction_features,
                                           columns=[STOCK,
                                                    STRATEGY1_RETURN,
                                                    STRATEGY2_RETURN])
 
     self.update_monthly_training_data(date_index)
-    model = self.fit_model_and_store_statistics()    
+    model = self.fit_model_and_store_statistics()
     x_new = prediction_features_df[[STRATEGY1_RETURN, STRATEGY2_RETURN]]
     y_pred = pd.Series(model.predict(x_new), name=PREDICTED_RETURN)
     predicted_returns = \
@@ -321,7 +322,8 @@ class RunBacktest:
     stocks = list(self.stocks_data.keys())
     n_stocks = ceil(len(stocks) * (self.top_pct / 100))
     predicted_returns = self.predict_returns(date_index)
-    sorted_predicted_returns = predicted_returns.sort_values(PREDICTED_RETURN, ascending=False)
+    sorted_predicted_returns = \
+      predicted_returns.sort_values(PREDICTED_RETURN, ascending=False)
     return list(sorted_predicted_returns[STOCK][:n_stocks])
 
 
@@ -398,8 +400,9 @@ class RunBacktest:
       if date_index == month_end_idx[0]:
         self.portfolio_performance.at[date_index, AUM] = self.initial_aum
       else:
-        self.portfolio_performance.at[date_index, AUM] = self.calc_aum(date_index)
-      
+        self.portfolio_performance.at[date_index, AUM] = \
+          self.calc_aum(date_index)
+
       self.portfolio_performance.at[date_index, DIVIDENDS_DF] = \
         self.portfolio_performance.at[date_index - 1, DIVIDENDS_DF] \
           + self.calc_dividends(date_index)
