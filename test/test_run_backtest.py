@@ -9,8 +9,8 @@ import pandas as pd
 
 from src.run_backtest import (DATE_FORMAT, IC, MOMENTUM, PREDICTED_RETURN,
                               REVERSAL, STOCK, STRATEGY1_COEFF,
-                              STRATEGY1_RETURN, STRATEGY2_COEFF,
-                              STRATEGY2_RETURN, RunBacktest)
+                              STRATEGY1_RETURN, STRATEGY1_T, STRATEGY2_COEFF,
+                              STRATEGY2_RETURN, STRATEGY2_T, RunBacktest)
 
 sys.path.append("/.../src")
 
@@ -131,11 +131,12 @@ class TestRunBacktest(unittest.TestCase):
     """
     rbt = self.init_run_backtest() 
     rbt.update_monthly_training_data(rbt.month_end_indexes[1]) 
-    model = rbt.fit_model_and_store_statistics()
+    _ = rbt.fit_model_and_store_statistics()
     self.assertEqual(len(rbt.model_statistics_record.index), 1)
     self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY1_COEFF], -0.06298238419)
     self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY2_COEFF], 1.651083787)
-    # TODO T-value
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY1_T], -0.10102735)
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY2_T], 0.09991468)
   
   def test_fit_model_and_store_statistics_initial_second_month(self):
     """
@@ -143,13 +144,14 @@ class TestRunBacktest(unittest.TestCase):
     """
     rbt = self.init_run_backtest() 
     rbt.update_monthly_training_data(rbt.month_end_indexes[1]) 
-    model1 = rbt.fit_model_and_store_statistics()
+    _ = rbt.fit_model_and_store_statistics()
     rbt.update_monthly_training_data(rbt.month_end_indexes[2]) 
-    model2 = rbt.fit_model_and_store_statistics()
+    _ = rbt.fit_model_and_store_statistics()
     self.assertEqual(len(rbt.model_statistics_record.index), 2)
     self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY1_COEFF], 0.01157124919)
     self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY2_COEFF], -1.1538965)
-    # TODO T-value
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY1_T], 0.0306406852)
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY2_T], -0.46914981793) 
 
   def test_predict_return(self):
     """
@@ -157,7 +159,7 @@ class TestRunBacktest(unittest.TestCase):
     """
     rbt = self.init_run_backtest()
     rbt.update_monthly_training_data(rbt.month_end_indexes[1]) 
-    model1 = rbt.fit_model_and_store_statistics()
+    _ = rbt.fit_model_and_store_statistics()
     predicted_returns = rbt.predict_returns(rbt.month_end_indexes[1])
     expected_returns = {
       self.tickers[0]: 27.17067977,
@@ -175,8 +177,8 @@ class TestRunBacktest(unittest.TestCase):
     """
     rbt = self.init_run_backtest()
     rbt.update_monthly_training_data(rbt.month_end_indexes[1]) 
-    model1 = rbt.fit_model_and_store_statistics()
-    predicted_returns = rbt.predict_returns(rbt.month_end_indexes[1]) 
+    _ = rbt.fit_model_and_store_statistics()
+    _ = rbt.predict_returns(rbt.month_end_indexes[1]) 
     stocks_to_buy = rbt.select_stocks_to_buy(rbt.month_end_indexes[1])
     self.assertListEqual(stocks_to_buy, [AMZN, SPY])
   
