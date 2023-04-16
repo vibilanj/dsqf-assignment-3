@@ -12,8 +12,6 @@ a given time frame and backtests a linear combination of two signals
 for a monthly strategy. Calculates various statistics based on the
 backtest simulation to provides an analysis of the strategy over the
 given time period.
-
-CHANGE ARGUMENT PASSING
 """
 import sys
 from src.input_data import InputData

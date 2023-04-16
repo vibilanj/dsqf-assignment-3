@@ -84,7 +84,7 @@ class RunBacktest:
       cumulative information coefficient of the portfolio.
     TODO
     """
-    self.portfolio_performance: pd.DataFrame = pd.DataFrame()
+    self.portfolio_performance: pd.DataFrame = self.init_portfolio_performance()
     self.portfolio: List[Tuple[str, float]] = []
     self.portfolio_record: List[List[Tuple[str, float]]] = []
     self.monthly_ic: pd.DataFrame = pd.DataFrame()
@@ -98,6 +98,22 @@ class RunBacktest:
                             STRATEGY2_COEFF,
                             STRATEGY1_T,
                             STRATEGY2_T])
+    self.month_end_indexes = self.get_month_end_indexes_from_b()
+
+  def init_portfolio_performance(self) -> None:
+    """
+    None: Initialises the portfolio performance dataframe with 
+      the datetime indexes in the specified period, the initial 
+      AUM and empty dividends.
+    """
+    datetime_indexes = list(self.stocks_data.values())[0].index.to_list()
+    portfolio_performance = pd.DataFrame()
+    portfolio_performance[DATETIME] = datetime_indexes
+    portfolio_performance[AUM] = \
+      [self.initial_aum for _ in range(len(datetime_indexes))]
+    portfolio_performance[DIVIDENDS_DF] = \
+      [0 for _ in range(len(datetime_indexes))]
+    return portfolio_performance
 
   def get_month_end_indexes_from_b(self) -> List[int]:
     """
@@ -105,7 +121,7 @@ class RunBacktest:
       from one month before the beginning date.
     """
     datetime_indexes = list(self.stocks_data.values())[0].index.to_list()
-    b_timestamp = pd.to_datetime(self.beginning_date, format=DATE_FORMAT) 
+    b_timestamp = pd.to_datetime(self.beginning_date, format=DATE_FORMAT)
     month_end_indexes = []
     first_index_after_b = None
 
@@ -157,9 +173,8 @@ class RunBacktest:
     Returns:
         float: _description_
     """
-    month_end_indexes = self.get_month_end_indexes_from_b()
     previous_month_index = \
-      month_end_indexes[month_end_indexes.index(date_index) - 1]
+      self.month_end_indexes[self.month_end_indexes.index(date_index) - 1]
 
     history = self.stocks_data[stock]
     end_close = history.iloc[date_index][CLOSE_PRICE]
@@ -174,9 +189,8 @@ class RunBacktest:
     Args:
         date_index (int): _description_
     """
-    month_end_indexes = self.get_month_end_indexes_from_b()
     previous_month_index = \
-      month_end_indexes[month_end_indexes.index(date_index) - 1]
+      self.month_end_indexes[self.month_end_indexes.index(date_index) - 1]
 
     training_data_block = []
     stock_list = list(self.stocks_data.keys())
@@ -184,7 +198,7 @@ class RunBacktest:
       strategy1_return = self.get_feature(
         stock,
         self.strategy1,
-        self.days1, 
+        self.days1,
         previous_month_index)
       strategy2_return = self.get_feature(
         stock,
@@ -192,14 +206,20 @@ class RunBacktest:
         self.days2,
         previous_month_index)
       actual_return = self.get_label(stock, date_index)
-      training_data_block.append([stock, strategy1_return, strategy2_return, actual_return])
+      training_data_block.append(\
+        [stock, strategy1_return, strategy2_return, actual_return])
 
-    training_data_df = pd.DataFrame(training_data_block, 
-                                    columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN, ACTUAL_RETURN])
-    self.model_training_data = pd.concat([self.model_training_data, training_data_df], ignore_index=True)
+    training_data_df = pd.DataFrame(training_data_block,
+                                    columns=[STOCK,
+                                             STRATEGY1_RETURN,
+                                             STRATEGY2_RETURN,
+                                             ACTUAL_RETURN])
+    self.model_training_data = \
+      pd.concat([self.model_training_data, training_data_df], 
+                ignore_index=True)
 
   def store_model_statistics(self,
-    X: pd.DataFrame,
+    x: pd.DataFrame,
     y: pd.Series,
     model: LinearRegression) -> None:
     """
@@ -210,13 +230,13 @@ class RunBacktest:
     """
     coefficients = model.coef_
 
-    n_samples, n_predictors = X.shape
-    residuals = y - model.predict(X)
+    n_samples, n_predictors = x.shape
+    residuals = y - model.predict(x)
     residual_std_error = np.sqrt(np.sum(residuals ** 2) / \
                                  (n_samples - n_predictors - 1))
 
-    X_design = np.concatenate([np.ones((n_samples, 1)), X], axis=1)
-    design_matrix_inv = np.linalg.inv(np.dot(X_design.T, X_design))
+    x_design = np.concatenate([np.ones((n_samples, 1)), x], axis=1)
+    design_matrix_inv = np.linalg.inv(np.dot(x_design.T, x_design))
     standard_errors = np.sqrt(np.diagonal(design_matrix_inv))\
       * residual_std_error
     t_values = coefficients / standard_errors[1:]
@@ -238,15 +258,14 @@ class RunBacktest:
     Returns:
         LinearRegression: _description_
     """
-    X = self.model_training_data[[STRATEGY1_RETURN, STRATEGY2_RETURN]]
+    x = self.model_training_data[[STRATEGY1_RETURN, STRATEGY2_RETURN]]
     y = self.model_training_data[ACTUAL_RETURN]
-    
-    model = LinearRegression()
-    model.fit(X, y)
-    self.store_model_statistics(X, y, model)
 
+    model = LinearRegression()
+    model.fit(x, y)
+    self.store_model_statistics(x, y, model)
     return model
-  
+
   def predict_returns(self, 
     date_index: int) -> pd.DataFrame:
     """
@@ -261,18 +280,30 @@ class RunBacktest:
     prediction_features = []
     stock_list = list(self.stocks_data.keys())
     for stock in stock_list:
-      strategy1_return = self.get_feature(stock, self.strategy1, self.days1, date_index)
-      strategy2_return = self.get_feature(stock, self.strategy2, self.days2, date_index)
+      strategy1_return = self.get_feature(
+        stock,
+        self.strategy1,
+        self.days1,
+        date_index)
+      strategy2_return = self.get_feature(
+        stock,
+        self.strategy2,
+        self.days2,
+        date_index)
       prediction_features.append([stock, strategy1_return, strategy2_return])
-    prediction_features_df = pd.DataFrame(prediction_features, columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN])
+    prediction_features_df = pd.DataFrame(prediction_features,
+                                          columns=[STOCK,
+                                                   STRATEGY1_RETURN,
+                                                   STRATEGY2_RETURN])
 
     self.update_monthly_training_data(date_index)
     model = self.fit_model_and_store_statistics()    
-    X_new = prediction_features_df[[STRATEGY1_RETURN, STRATEGY2_RETURN]]
-    y_pred = pd.Series(model.predict(X_new), name=PREDICTED_RETURN)
-    predicted_returns = pd.concat([prediction_features_df[STOCK], y_pred], axis=1)
+    x_new = prediction_features_df[[STRATEGY1_RETURN, STRATEGY2_RETURN]]
+    y_pred = pd.Series(model.predict(x_new), name=PREDICTED_RETURN)
+    predicted_returns = \
+      pd.concat([prediction_features_df[STOCK], y_pred], axis=1)
     return predicted_returns
-  
+
   def select_stocks_to_buy(self,
     date_index: int) -> List[str]:
     """
@@ -320,19 +351,6 @@ class RunBacktest:
       stocks_amount.append((stock, amount))
     return stocks_amount
 
-  def init_portfolio_performance(self) -> None:
-    """
-    None: Initialises the portfolio performance dataframe with 
-      the datetime indexes in the specified period, the initial 
-      AUM and empty dividends.
-    """
-    datetime_indexes = list(self.stocks_data.values())[0].index.to_list() 
-    self.portfolio_performance[DATETIME] = datetime_indexes
-    self.portfolio_performance[AUM] = \
-      [self.initial_aum for _ in range(len(datetime_indexes))]
-    self.portfolio_performance[DIVIDENDS_DF] = \
-      [0 for _ in range(len(datetime_indexes))]
-
   def calc_aum(self, date_index: int) -> float:
     """
     Calculates the assets under management amount for a given date.
@@ -371,12 +389,11 @@ class RunBacktest:
     """
     None: TODO
     """
-    self.init_portfolio_performance()
-    month_end_indexes = self.get_month_end_indexes_from_b()[1:]
-    for date_index in range(month_end_indexes[0], \
+    month_end_idx = self.month_end_indexes[1:]
+    for date_index in range(month_end_idx[0], \
                             len(list(self.stocks_data.values())[0].index)):
       # updating portfolio performance by each row
-      if date_index == month_end_indexes[0]:
+      if date_index == month_end_idx[0]:
         self.portfolio_performance.at[date_index, AUM] = self.initial_aum
       else:
         self.portfolio_performance.at[date_index, AUM] = self.calc_aum(date_index)
@@ -386,7 +403,7 @@ class RunBacktest:
           + self.calc_dividends(date_index)
 
       # rebalance and store new portfolio
-      if date_index in month_end_indexes:
+      if date_index in month_end_idx:
         stocks_to_buy = self.select_stocks_to_buy(date_index)
         self.portfolio = self.calc_portfolio(
           stocks_to_buy,
@@ -412,20 +429,20 @@ class RunBacktest:
       information coefficient for each month end day in the specified 
       period.
     """
-    month_end_indexes = self.get_month_end_indexes_from_b()[1:]
+    month_end_idx = self.month_end_indexes[1:]
     self.monthly_ic[DATETIME] = \
-      list(self.stocks_data.values())[0].index[month_end_indexes[:-1]]
-    self.monthly_ic[IC] = [0 for _ in range(len(month_end_indexes[:-1]))]
+      list(self.stocks_data.values())[0].index[month_end_idx[:-1]]
+    self.monthly_ic[IC] = [0 for _ in range(len(month_end_idx[:-1]))]
 
     number_stocks_bought = ceil(len(self.stocks_data) * (self.top_pct / 100))
-    for i in range(len(month_end_indexes[:-1])):
+    for i in range(len(month_end_idx[:-1])):
       number_correct = 0
 
       for stock, _ in self.portfolio_record[i]:
         current_close = \
-          list(self.stocks_data[stock][CLOSE_PRICE])[month_end_indexes[i]]
+          list(self.stocks_data[stock][CLOSE_PRICE])[month_end_idx[i]]
         next_close = \
-          list(self.stocks_data[stock][CLOSE_PRICE])[month_end_indexes[i + 1]]
+          list(self.stocks_data[stock][CLOSE_PRICE])[month_end_idx[i + 1]]
         if next_close > current_close:
           number_correct += 1
 
