@@ -14,10 +14,11 @@ backtest simulation to provides an analysis of the strategy over the
 given time period.
 """
 import sys
-from src.input_data import InputData
-from src.stocks_fetcher import StocksFetcher
-from src.run_backtest import RunBacktest
+
 from src.backtest_stats import BacktestStats
+from src.input_data import InputData
+from src.run_backtest import RunBacktest
+from src.stocks_fetcher import StocksFetcher
 
 sys.path.append("/.../src")
 

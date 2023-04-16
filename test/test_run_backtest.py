@@ -37,7 +37,7 @@ class TestRunBacktest(unittest.TestCase):
   top_pct = 50
 
   path = "./test/data/run_backtest/"
-  stocks_data = dict()
+  stocks_data = {}
   for ticker in tickers:
     stock_data = pd.read_csv(path + ticker + ".csv",
                              parse_dates=["Date"],
@@ -58,7 +58,7 @@ class TestRunBacktest(unittest.TestCase):
       self.days1,
       self.days2,
       self.top_pct)
-  
+
   def test_get_month_end_indexes_from_b(self):
     """
     Tests the get_month_end_indexes_from_b method.
@@ -129,36 +129,44 @@ class TestRunBacktest(unittest.TestCase):
     """
     Tests the fit_model_and_store_statistics method for the first month.
     """
-    rbt = self.init_run_backtest() 
-    rbt.update_monthly_training_data(rbt.month_end_indexes[1]) 
+    rbt = self.init_run_backtest()
+    rbt.update_monthly_training_data(rbt.month_end_indexes[1])
     _ = rbt.fit_model_and_store_statistics()
     self.assertEqual(len(rbt.model_statistics_record.index), 1)
-    self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY1_COEFF], -0.06298238419)
-    self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY2_COEFF], 1.651083787)
-    self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY1_T], -0.10102735)
-    self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY2_T], 0.09991468)
-  
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY1_COEFF],
+                           -0.06298238419)
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY2_COEFF],
+                           1.651083787)
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY1_T],
+                           -0.10102735)
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[0][STRATEGY2_T],
+                           0.09991468)
+
   def test_fit_model_and_store_statistics_initial_second_month(self):
     """
     Tests the fit_model_and_store_statistics method for the second month.
     """
-    rbt = self.init_run_backtest() 
-    rbt.update_monthly_training_data(rbt.month_end_indexes[1]) 
+    rbt = self.init_run_backtest()
+    rbt.update_monthly_training_data(rbt.month_end_indexes[1])
     _ = rbt.fit_model_and_store_statistics()
-    rbt.update_monthly_training_data(rbt.month_end_indexes[2]) 
+    rbt.update_monthly_training_data(rbt.month_end_indexes[2])
     _ = rbt.fit_model_and_store_statistics()
     self.assertEqual(len(rbt.model_statistics_record.index), 2)
-    self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY1_COEFF], 0.01157124919)
-    self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY2_COEFF], -1.1538965)
-    self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY1_T], 0.0306406852)
-    self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY2_T], -0.46914981793) 
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY1_COEFF],
+                           0.01157124919)
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY2_COEFF],
+                           -1.1538965)
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY1_T],
+                           0.0306406852)
+    self.assertAlmostEqual(rbt.model_statistics_record.iloc[1][STRATEGY2_T],
+                           -0.46914981793)
 
   def test_predict_return(self):
     """
     Tests the predict_return method.
     """
     rbt = self.init_run_backtest()
-    rbt.update_monthly_training_data(rbt.month_end_indexes[1]) 
+    rbt.update_monthly_training_data(rbt.month_end_indexes[1])
     _ = rbt.fit_model_and_store_statistics()
     predicted_returns = rbt.predict_returns(rbt.month_end_indexes[1])
     expected_returns = {
@@ -168,20 +176,22 @@ class TestRunBacktest(unittest.TestCase):
       self.tickers[3]: 14.37463767
     }
     for ticker in self.tickers:
-      predicted_return = predicted_returns.loc[predicted_returns[STOCK] == ticker].iloc[0][PREDICTED_RETURN]
+      predicted_return = \
+        predicted_returns.loc[predicted_returns[STOCK] == \
+                              ticker].iloc[0][PREDICTED_RETURN]
       self.assertAlmostEqual(predicted_return, expected_returns[ticker])
-    
+
   def test_select_stocks_to_buy(self):
     """
     Tests the select_stocks_to_buy method.
     """
     rbt = self.init_run_backtest()
-    rbt.update_monthly_training_data(rbt.month_end_indexes[1]) 
+    rbt.update_monthly_training_data(rbt.month_end_indexes[1])
     _ = rbt.fit_model_and_store_statistics()
-    _ = rbt.predict_returns(rbt.month_end_indexes[1]) 
+    _ = rbt.predict_returns(rbt.month_end_indexes[1])
     stocks_to_buy = rbt.select_stocks_to_buy(rbt.month_end_indexes[1])
     self.assertListEqual(stocks_to_buy, [AMZN, SPY])
-  
+
   def test_calc_portfolio(self):
     """
     Tests the calc_portfolio method.
@@ -190,26 +200,28 @@ class TestRunBacktest(unittest.TestCase):
     portfolio= rbt.calc_portfolio([AMZN, WMT], 10000, rbt.month_end_indexes[1])
     self.assertAlmostEqual(portfolio[0][1], 48.48249911)
     self.assertAlmostEqual(portfolio[1][1], 34.89604083)
-    
+
   def test_calc_aum(self):
     """
     Tests the calc_aum method.
     """
     rbt = self.init_run_backtest()
-    amt_AMZN = 15
-    amt_WMT = 40
-    rbt.portfolio = [(AMZN, amt_AMZN), (WMT, amt_WMT)]
-    self.assertAlmostEqual(rbt.calc_aum(rbt.month_end_indexes[2]), 7075.44406891)
-  
+    amt_amzn = 15
+    amt_wmt = 40
+    rbt.portfolio = [(AMZN, amt_amzn), (WMT, amt_wmt)]
+    self.assertAlmostEqual(rbt.calc_aum(rbt.month_end_indexes[2]),
+                           7075.44406891)
+
   def test_calc_dividends(self):
     """
     Tests the calc_dividends method.
     """
     rbt = self.init_run_backtest()
-    amt_AMZN = 80
-    amt_SPY = 20
-    rbt.portfolio = [(AMZN, amt_AMZN), (SPY, amt_SPY)]   
-    self.assertAlmostEqual(rbt.calc_dividends(203), amt_SPY * 1.366 + amt_AMZN * 0)
+    amt_amzn = 80
+    amt_spy = 20
+    rbt.portfolio = [(AMZN, amt_amzn), (SPY, amt_spy)]
+    self.assertAlmostEqual(rbt.calc_dividends(203),
+                           amt_spy * 1.366 + amt_amzn * 0)
 
   def test_fill_up_portfolio_performance(self):
     """
@@ -222,8 +234,10 @@ class TestRunBacktest(unittest.TestCase):
     self.assertEqual(len(rbt.model_training_data.index), 3 * len(self.tickers))
     last_stocks = [stock for stock, _ in rbt.portfolio]
     self.assertListEqual(last_stocks, [SPY, WMT])
-    self.assertAlmostEqual(rbt.model_statistics_record.iloc[-1][STRATEGY1_COEFF], 0.05126014085)
-    self.assertAlmostEqual(rbt.model_statistics_record.iloc[-1][STRATEGY2_COEFF], -0.7767555499)
+    self.assertAlmostEqual(
+      rbt.model_statistics_record.iloc[-1][STRATEGY1_COEFF], 0.05126014085)
+    self.assertAlmostEqual(
+      rbt.model_statistics_record.iloc[-1][STRATEGY2_COEFF],-0.7767555499)
 
   def test_calc_ic(self):
     """
@@ -233,4 +247,3 @@ class TestRunBacktest(unittest.TestCase):
     rbt.fill_up_portfolio_performance()
     rbt.calc_ic()
     self.assertEqual(rbt.monthly_ic.at[1, IC], 0)
-  
