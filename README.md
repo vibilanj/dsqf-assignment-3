@@ -29,13 +29,13 @@
 
 ### Backtesting Strategy
 
-To backtest the momentum strategy with an initial AUM of 10000, with 100 days to calculate returns and on the top 10% of the stock universe (AAPL, TSLA, LMT, BA, GOOG, AMZN, NVDA, META, WMT, MCD) from January 1, 2022 to March 18, 2023, run the following: 
+To backtest a linear combination of 1) momentum strategy with 60 days, and 2) reversal strategy with 30 days, with an initial AUM of 10000, and on the top 10% of the stock universe containing AAPL, TSLA, LMT, BA, GOOG, AMZN, NVDA, META, WMT, MCD from January 1, 2022 to January 1, 2023, run the following: 
 
-* `python backtest_two_signal_strategy.py --tickers AAPL,TSLA,LMT,BA,GOOG,AMZN,NVDA,META,WMT,MCD --b 20220101 --e 20230318 --initial_aum 10000 --strategy1_type M --days1 100 --top_pct 10 --strategy2_type M --days2 100`
+* `python backtest_two_signal_strategy.py --tickers AAPL,TSLA,LMT,BA,GOOG,AMZN,NVDA,META,WMT,MCD --b 20220101 --e 20230101 --initial_aum 10000 --strategy1_type M --days1 60 --strategy2_type R --days2 30 --top_pct 10`
 
-To backtest the reversal strategy with an initial AUM of 10000, with 20 days to calculate returns and on the top 20% of the stock universe (AAPL, TSLA, GOOG, META, NFLX) from June 1, 2022 to today, run the following: 
+To backtest a linear combination of 1) reversal strategy with 10 days, and 2) momentum strategy with 40 days, with an initial AUM of 10000, and on the top 20% of the stock universe containing AAPL, TSLA, LMT, BA, GOOG, AMZN, NVDA, META, WMT, MCD from June 1, 2022 to today run the following: 
 
-* `python backtest_strategy.py --tickers AAPL,TSLA,GOOG,META,NFLX --b 20220601 --initial_aum 10000 --strategy_type R --days 20 --top_pct 20`
+* `python backtest_strategy.py --tickers AAPL,TSLA,GOOG,META,NFLX --b 20220601 --initial_aum 10000 --strategy1_type R --days1 10 --strategy2_type M --days2 40 --top_pct 20`
 
 ### Note
 

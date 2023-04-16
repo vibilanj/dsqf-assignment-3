@@ -39,8 +39,10 @@ if __name__ == "__main__":
     stocks_data=stocks_data,
     initial_aum=user_input.get_initial_aum(),
     beginning_date=user_input.get_beginning_date(),
-    days=user_input.get_days(),
-    strategy=user_input.get_strategy_type(),
+    strategy1=user_input.get_strategy1_type(),
+    strategy2=user_input.get_strategy2_type(),
+    days1=user_input.get_days1(),
+    days2=user_input.get_days2(),
     top_pct=user_input.get_top_pct())
   backtest.fill_up_portfolio_performance()
   backtest.calc_ic()
@@ -48,11 +50,13 @@ if __name__ == "__main__":
   # Getting the backtest performance and IC information
   portfolio_perf = backtest.portfolio_performance
   portfolio_ic = backtest.monthly_ic
+  model_stats = backtest.model_statistics_record
 
   # Calculating backtest statistics
   backtest_statistics = BacktestStats(
     portfolio_performance=portfolio_perf,
-    monthly_ic=portfolio_ic)
+    monthly_ic=portfolio_ic,
+    model_statistics=model_stats)
 
   # Printing statistics summary and geenrating plots
   backtest_statistics.print_summary()

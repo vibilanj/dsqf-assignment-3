@@ -15,6 +15,12 @@ IC = "ic"
 CLOSE_PRICE = "Close"
 DIVIDENDS = "Dividends"
 
+# Model Statistics Indexes
+STRATEGY1_COEFF_IDX = 0
+STRATEGY2_COEFF_IDX = 1
+STRATEGY1_T_IDX = 2
+STRATEGY2_T_IDX = 3
+
 class BacktestStats:
   """
   Defines the BacktestStats class which calculates statistics based
@@ -23,7 +29,8 @@ class BacktestStats:
   """
   def __init__(self,
     portfolio_performance: pd.DataFrame,
-    monthly_ic: pd.DataFrame):
+    monthly_ic: pd.DataFrame,
+    model_statistics: pd.DataFrame):
     """
     This method initialises the BacktestStats class.
 
@@ -34,20 +41,25 @@ class BacktestStats:
       monthly_ic (pd.Dataframe): The dataframe containing the monthly
         information coefficient information calculated during the 
         backtest simulation
+      TODO
     """
     self.portfolio_performance: pd.DataFrame = portfolio_performance
     self.monthly_ic: pd.DataFrame = monthly_ic
+    self.model_statistics: pd.DataFrame = model_statistics
 
     """
     beginning_trading_date (pd.Timestamp): The timestamp of the 
       beginning trading day.
     ending_trading_date (pd.Timestamp): The timestamp of the 
       ending trading day.
+    TODO
     """
     self.beginning_trading_date: pd.Timestamp = \
       self.portfolio_performance[DATETIME][0]
     self.ending_trading_date: pd.Timestamp = \
       list(self.portfolio_performance[DATETIME])[-1]
+    self.latest_model_statistics: List[float] = \
+      self.model_statistics.values().tolist()[-1]
 
   def get_beginning_trading_date_str(self) -> str:
     """
@@ -170,6 +182,30 @@ class BacktestStats:
     return (self.get_average_daily_return() - 0.0001) \
       / self.get_daily_standard_deviation()
 
+  def get_strategy1_coefficient(self) -> float:
+    """
+    float: TODO
+    """
+    return self.latest_model_statistics[STRATEGY1_COEFF_IDX]
+
+  def get_strategy2_coefficient(self) -> float:
+    """
+    float: TODO
+    """
+    return self.latest_model_statistics[STRATEGY2_COEFF_IDX]
+
+  def get_strategy1_t_value(self) -> float:
+    """
+    float: TODO
+    """
+    return self.latest_model_statistics[STRATEGY1_T_IDX]
+
+  def get_strategy2_t_value(self) -> float:
+    """
+    float: TODO
+    """
+    return self.latest_model_statistics[STRATEGY2_T_IDX]
+
   def print_summary(self) -> None:
     """
     None: Prints the formatted summary of the calculated portfolio
@@ -190,6 +226,10 @@ class BacktestStats:
     Average Daily Return: {self.get_average_daily_return() * 100:.5f}%
     Daily Standard Deviation: {self.get_daily_standard_deviation() * 100:.5f}%
     Daily Sharpe Ratio: {self.get_daily_sharpe_ratio():.5f}
+    Strategy 1 Coefficient: {self.get_strategy1_coefficient():.5f}
+    Strategy 2 Coefficient: {self.get_strategy2_coefficient():.5f}
+    Strategy 1 T-Value: {self.get_strategy1_t_value():.5f}
+    Strategy 2 T-Value: {self.get_strategy2_t_value():.5f}
     """
     print(out_str)
 
