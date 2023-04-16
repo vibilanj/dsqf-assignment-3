@@ -5,7 +5,7 @@ the backtest
 import sys
 import unittest
 from src.stocks_fetcher import StocksFetcher, DATE_FORMAT
-from src.run_backtest import RunBacktest, MOMENTUM, REVERSAL, CLOSE_PRICE
+from src.run_backtest import RunBacktest, MOMENTUM, REVERSAL, CLOSE_PRICE, STRATEGY1_RETURN, STRATEGY2_RETURN
 from random import randint
 import pandas as pd
 import os
@@ -18,7 +18,7 @@ class TestRunBacktest(unittest.TestCase):
   Defines the TestRunBacktest class which tests the RunBacktest class.
   """
 
-  tickers = ["WMT", "AMZN", "NFLX", "SPY"]
+  tickers = ["AMZN", "NFLX", "SPY", "WMT"]
 
   # RunBacktest parameters
   start_str = "20230101"
@@ -59,7 +59,7 @@ class TestRunBacktest(unittest.TestCase):
     """
     rbt = self.init_run_backtest()
     self.assertEqual(len(rbt.month_end_indexes), 4)
-    date_indexes = self.stocks_data[self.tickers[0]].index
+    date_indexes = self.stocks_data[self.tickers[3]].index
     expected = ["20221230", "20230131", "20230228", "20230331"]
     for idx, month_end_index in enumerate(rbt.month_end_indexes):
       self.assertEqual(date_indexes[month_end_index].strftime(DATE_FORMAT), 
@@ -70,7 +70,7 @@ class TestRunBacktest(unittest.TestCase):
     _summary_
     """
     rbt = self.init_run_backtest()
-    feature = rbt.get_feature(self.tickers[0], 
+    feature = rbt.get_feature(self.tickers[3], 
                                self.strategy1, 
                                self.days1, 
                                rbt.month_end_indexes[1])
@@ -81,7 +81,7 @@ class TestRunBacktest(unittest.TestCase):
     _summary_
     """
     rbt = self.init_run_backtest()
-    feature = rbt.get_feature(self.tickers[0], 
+    feature = rbt.get_feature(self.tickers[3], 
                                self.strategy2, 
                                self.days2, 
                                rbt.month_end_indexes[1])
@@ -92,10 +92,34 @@ class TestRunBacktest(unittest.TestCase):
     _summary_
     """
     rbt = self.init_run_backtest()
-    label = rbt.get_label(self.tickers[3],
+    label = rbt.get_label(self.tickers[2],
                           rbt.month_end_indexes[2])
     self.assertAlmostEqual(label, -2.514270969)
 
+  def test_update_monthly_training_data(self):
+    """
+    _summary_
+    """
+    rbt = self.init_run_backtest()
+    self.assertEqual(len(rbt.model_training_data.index), 0)
+    rbt.update_monthly_training_data(rbt.month_end_indexes[1])
+    print(rbt.model_training_data[STRATEGY1_RETURN][0])
+    self.assertEqual(len(rbt.model_training_data.index), len(self.tickers))
+    expected_strategy1_return = [-19.43647776, 33.80758169, 7.94668542, 13.80128421]
+    expected_strategy2_return = [0.250625471, -0.9638942459, 0.4491470511, -1.177856641]
+    for i in range(len(self.tickers)):
+      self.assertAlmostEqual(rbt.model_training_data[STRATEGY1_RETURN][i], expected_strategy1_return[i])
+      self.assertAlmostEqual(rbt.model_training_data[STRATEGY2_RETURN][i], expected_strategy2_return[i]) 
+    
+  def test_fit_model_and_store_statistics(self):
+    """
+    _summary_
+    """
+    rbt = self.init_run_backtest() 
+    rbt.update_monthly_training_data(rbt.month_end_indexes[1]) 
+    rbt.fit_model_and_store_statistics()
+    self.assertEqual(len(rbt.model_statistics_record.index), 1)
+    
 
   # def test_calc_stocks_to_buy_m(self):
   #   """
