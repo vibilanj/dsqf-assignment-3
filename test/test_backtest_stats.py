@@ -18,8 +18,8 @@ class TestBacktestStats(unittest.TestCase):
   Defines the TestBacktestStats class which tests the BacktestStats class.
   """
   # StockFetcher parameters
-  start_str = "20220831"
-  end_str = "20230331"
+  start_str = "20230101"
+  end_str = "20230410"
   ticker_1 = "AMZN"
   ticker_2 = "NFLX"
   ticker_3 = "SPY"

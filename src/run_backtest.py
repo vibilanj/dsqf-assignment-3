@@ -319,7 +319,7 @@ class RunBacktest:
     stocks = list(self.stocks_data.keys())
     n_stocks = ceil(len(stocks) * (self.top_pct / 100))
     predicted_returns = self.predict_returns(date_index)
-    sorted_predicted_returns = predicted_returns.sort_values(PREDICTED_RETURN)
+    sorted_predicted_returns = predicted_returns.sort_values(PREDICTED_RETURN, ascending=False)
     return list(sorted_predicted_returns[STOCK][:n_stocks])
 
 
