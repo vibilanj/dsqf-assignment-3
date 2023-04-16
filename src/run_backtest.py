@@ -157,7 +157,9 @@ class RunBacktest:
 
     history = self.stocks_data[stock]
     end_close = history.iloc[date_index][CLOSE_PRICE]
+    print(end_close)
     start_close = history.iloc[date_index - days][CLOSE_PRICE]
+    print(start_close)
     return (end_close - start_close) / start_close * 100
 
   def get_label(self,
