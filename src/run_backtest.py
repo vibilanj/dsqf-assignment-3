@@ -5,6 +5,8 @@ import pandas as pd
 from math import ceil
 from typing import Dict, List, Tuple
 from sklearn.linear_model import LinearRegression
+from scipy import stats
+import numpy as np
 
 # Constants
 MOMENTUM = "M"
@@ -26,6 +28,12 @@ STRATEGY1_RETURN = "strategy1_return"
 STRATEGY2_RETURN = "strategy2_return"
 ACTUAL_RETURN = "actual_return"
 PREDICTED_RETURN = "predicted_return"
+ 
+# Model Statistics Constants
+STRATEGY1_COEFF = "strategy1_coeff"
+STRATEGY2_COEFF = "strategy2_coeff"
+STRATEGY1_T = "strategy1_t"
+STRATEGY2_T = "strategy2_t"
 
 class RunBacktest:
   """
@@ -82,7 +90,7 @@ class RunBacktest:
     self.portfolio_record: List[List[Tuple[str, float]]] = []
     self.monthly_ic: pd.DataFrame = pd.DataFrame()
     self.model_training_data: pd.DataFrame = pd.DataFrame(columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN, ACTUAL_RETURN])
-    self.model_statistics_record: pd.DataFrame = pd.DataFrame()
+    self.model_statistics_record: pd.DataFrame = pd.DataFrame(columns=[STRATEGY1_COEFF, STRATEGY2_COEFF, STRATEGY1_T, STRATEGY2_T])
 
   def get_month_end_indexes_from_b(self) -> List[int]:
     """
@@ -168,8 +176,35 @@ class RunBacktest:
       actual_return = self.get_label(stock, date_index)
       training_data_block.append([stock, strategy1_return, strategy2_return, actual_return])
     
-    training_data_df = pd.DataFrame(training_data_block, columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN, ACTUAL_RETURN])
+    training_data_df = pd.DataFrame(training_data_block, 
+                                    columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN, ACTUAL_RETURN])
     self.model_training_data = pd.concat([self.model_training_data, training_data_df], ignore_index=True)
+
+  def store_model_statistics(self,
+    X: pd.DataFrame, 
+    y: pd.Series, 
+    model: LinearRegression) -> None:
+    """
+    _summary_ TODO
+
+    Args:
+        model (LinearRegression): _description_
+    """
+    coefficients = model.coef_
+
+    n_samples, n_predictors = X.shape
+    residuals = y - model.predict(X)
+    residual_std_error = np.sqrt(np.sum(residuals ** 2) / (n_samples - n_predictors - 1))
+
+    X_design = np.concatenate([np.ones((n_samples, 1)), X], axis=1)
+    design_matrix_inv = np.linalg.inv(np.dot(X_design.T, X_design))
+    standard_errors = np.sqrt(np.diagonal(design_matrix_inv)) * residual_std_error
+    t_values = coefficients / standard_errors[1:]  
+
+    statistics = np.concatenate((coefficients, t_values))
+    statistics_df = pd.DataFrame(statistics.reshape(1, -1), columns=[STRATEGY1_COEFF, STRATEGY2_COEFF, STRATEGY1_T, STRATEGY2_T])
+    self.model_statistics_record = pd.concat([self.model_statistics_record, statistics_df])
+
 
   def fit_model(self) -> LinearRegression:
     """
@@ -183,6 +218,8 @@ class RunBacktest:
     
     model = LinearRegression()
     model.fit(X, y)
+    self.store_model_statistics(X, y, model)
+
     return model
   
   def predict_returns(self, 
@@ -300,7 +337,7 @@ class RunBacktest:
     self.portfolio_performance = \
       self.portfolio_performance[b_idx:].reset_index(drop=True)
 
-      
+
   def calc_aum(self, date_index: int) -> float:
     """
     Calculates the assets under management amount for a given date.
