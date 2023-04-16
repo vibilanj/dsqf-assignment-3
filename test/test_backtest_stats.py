@@ -8,7 +8,7 @@ import pytest
 import os.path
 from datetime import date
 from src.stocks_fetcher import StocksFetcher
-from src.run_backtest import RunBacktest, MOMENTUM
+from src.run_backtest import RunBacktest, MOMENTUM, REVERSAL
 from src.backtest_stats import BacktestStats
 
 sys.path.append("/.../src")
@@ -18,21 +18,23 @@ class TestBacktestStats(unittest.TestCase):
   Defines the TestBacktestStats class which tests the BacktestStats class.
   """
   # StockFetcher parameters
-  start_str = "20201217"
-  end_str = "20210302"
-  ticker_1 = "AAPL"
-  ticker_2 = "GOOGL"
-  ticker_3 = "MSFT"
-  ticker_4 = "NFLX"
-  ticker_5 = "META"
-  tickers_str = [ticker_1, ticker_2, ticker_3, ticker_4, ticker_5]
+  start_str = "20220831"
+  end_str = "20230331"
+  ticker_1 = "AMZN"
+  ticker_2 = "NFLX"
+  ticker_3 = "SPY"
+  ticker_4 = "WMT"
+  tickers_list = [ticker_1, ticker_2, ticker_3, ticker_4]
   ticker_obj = StocksFetcher()
-  stocks_data = ticker_obj.fetch_stocks_data(tickers_str, start_str, end_str)
+  stocks_data = ticker_obj.fetch_stocks_data(tickers_list, start_str, end_str)
 
   # RunBacktest parameters
   initial_aum = 10000
-  days = 20
-  top_pct = 40
+  strategy1 = MOMENTUM
+  strategy2 = REVERSAL
+  days1 = 50
+  days2 = 5
+  top_pct = 50
 
   def init_backtest_stats(self):
     """
@@ -42,15 +44,18 @@ class TestBacktestStats(unittest.TestCase):
       self.stocks_data,
       self.initial_aum,
       self.start_str,
-      self.days,
-      MOMENTUM,
+      self.strategy1,
+      self.strategy2,
+      self.days1,
+      self.days2,
       self.top_pct)
     run_backtest.fill_up_portfolio_performance()
     run_backtest.calc_ic()
 
     return BacktestStats(
       run_backtest.portfolio_performance,
-      run_backtest.monthly_ic)
+      run_backtest.monthly_ic,
+      run_backtest.model_statistics_record)
 
   def test_get_beginning_trading_date_str(self):
     """
