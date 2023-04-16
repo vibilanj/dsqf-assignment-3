@@ -5,7 +5,6 @@ import pandas as pd
 from math import ceil
 from typing import Dict, List, Tuple
 from sklearn.linear_model import LinearRegression
-from scipy import stats
 import numpy as np
 
 # Constants
