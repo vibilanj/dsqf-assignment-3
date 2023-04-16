@@ -249,7 +249,7 @@ class RunBacktest:
                             STRATEGY1_T,
                             STRATEGY2_T])
     self.model_statistics_record = \
-      pd.concat([self.model_statistics_record, statistics_df])
+      pd.concat([self.model_statistics_record, statistics_df], ignore_index=True)
 
   def fit_model_and_store_statistics(self) -> LinearRegression:
     """
