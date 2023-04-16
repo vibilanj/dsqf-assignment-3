@@ -1,11 +1,12 @@
 """
 This module is responsible for running the backtest simulation.
 """
-import pandas as pd
 from math import ceil
 from typing import Dict, List, Tuple
-from sklearn.linear_model import LinearRegression
+
 import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
 
 # Constants
 MOMENTUM = "M"
@@ -57,11 +58,15 @@ class RunBacktest:
         the stock ticker to the price information of the stock.
       initial_aum (int): The initial asset under management amount.
       beginning_date (str): The beginning date of the backtest period.
-      days (int): The number of days to look back during calculation
-        of stock returns.
-      strategy (str): The backtesting strategy, either Momentum or Reversal.
+      strategy1 (str): The first backtesting strategy, either Momentum
+        or Reversal.
+      strategy2 (str): The second backtesting strategy, either Momentum
+        or Reversal.
+      days1 (int): The number of days to look back during calculation
+        of stock returns for the first strategy.
+      days2 (int): The number of days to look back during calculation
+        of stock returns for the second strategy.
       top_pct (int): The percentage of stocks to pick for the portfolio.
-      TODO
     """
     self.stocks_data: Dict[str, pd.DataFrame] = stocks_data
     self.initial_aum: int = initial_aum
@@ -82,7 +87,11 @@ class RunBacktest:
       a record of previous portfolios. Each element is a portfolio.
     monthly_ic (pd.DataFrame): The dataframe to store the monthly 
       cumulative information coefficient of the portfolio.
-    TODO
+    model_training_data (pd.DataFrame): The dataframe to store the
+      training data for the linear regression model.
+    model_statistics_record (pd.DataFrame): The dataframe to store
+      the record of the statistics of the linear regression model.
+    month_end_indexes (List[int]): The list of indexes of the month
     """
     self.portfolio_performance: pd.DataFrame = self.init_portfolio_performance()
     self.portfolio: List[Tuple[str, float]] = []
@@ -98,7 +107,7 @@ class RunBacktest:
                             STRATEGY2_COEFF,
                             STRATEGY1_T,
                             STRATEGY2_T])
-    self.month_end_indexes = self.get_month_end_indexes_from_b()
+    self.month_end_indexes: List[int] = self.get_month_end_indexes_from_b()
 
   def init_portfolio_performance(self) -> None:
     """
@@ -141,16 +150,17 @@ class RunBacktest:
     days: int,
     date_index: int) -> float:
     """
-    _summary_ TODO
+    Calculates the feature for a given stock based on the 
+    strategy and the number of days from a given date index.
 
     Args:
-        ticker (str): _description_
-        strategy (str): _description_
-        days (int): _description_
-        date_index (int): _description_
+      stock (str): The stock ticker to calculate the feature for.
+      strategy (str): The backtesting strategy, either Momentum or Reversal.
+      days (int): The number of days to look back.
+      date_index (int): The index of the date from which to get features.
 
     Returns:
-        float: _description_
+      float: Returns the value for the backtesting feature.
     """
     is_momentum = strategy == MOMENTUM
     date_index -= MOMENTUM_GAP * is_momentum
@@ -164,14 +174,15 @@ class RunBacktest:
     stock: str,
     date_index: int) -> float:
     """
-    _summary_ TODO
+    Calculates the label for a given stock based from the 
+    given date index.
 
     Args:
-        stock (str): _description_
-        date_index (int): _description_
+      stock (str): The stock ticker to calculate the label for.
+      date_index (int): The index of the date from which to get labels.
 
     Returns:
-        float: _description_
+      float: Returns the value for the backtesting label.
     """
     previous_month_index = \
       self.month_end_indexes[self.month_end_indexes.index(date_index) - 1]
@@ -184,10 +195,12 @@ class RunBacktest:
   def update_monthly_training_data(self,
     date_index: int) -> None:
     """
-    _summary_ TODO
+    Updates the monthly training data for the linear regression model 
+    based on the given date index.
 
     Args:
-        date_index (int): _description_
+      date_index (int): The index of the date until which to update
+        the training data.
     """
     previous_month_index = \
       self.month_end_indexes[self.month_end_indexes.index(date_index) - 1]
@@ -223,10 +236,13 @@ class RunBacktest:
     y: pd.Series,
     model: LinearRegression) -> None:
     """
-    _summary_ TODO
+    Calculates and stores the model coefficients and t-values 
+    in the model statistics record dataframe.
 
     Args:
-        model (LinearRegression): _description_
+      x (pd.DataFrame): The training data for the model.
+      y (pd.Series): The training labels for the model.
+      model (LinearRegression): The linear regression model.
     """
     coefficients = model.coef_
 
@@ -249,14 +265,15 @@ class RunBacktest:
                             STRATEGY1_T,
                             STRATEGY2_T])
     self.model_statistics_record = \
-      pd.concat([self.model_statistics_record, statistics_df], ignore_index=True)
+      pd.concat([self.model_statistics_record, statistics_df],
+                ignore_index=True)
 
   def fit_model_and_store_statistics(self) -> LinearRegression:
     """
-    _summary_ TODO
+    Fits the linear regression model and stores the model statistics.
 
     Returns:
-        LinearRegression: _description_
+      LinearRegression: The fitted linear regression model.
     """
     x = self.model_training_data[[STRATEGY1_RETURN, STRATEGY2_RETURN]]
     y = self.model_training_data[ACTUAL_RETURN]
@@ -269,13 +286,16 @@ class RunBacktest:
   def predict_returns(self,
     date_index: int) -> pd.DataFrame:
     """
-    _summary_ TODO
+    Gets the features and labels and updates the training data 
+    dataframe. Fits the model and stores model statitics. Predicts
+    the returns for the given date index.
 
     Args:
-        date_index (int): _description_
+      date_index (int): The index of the date from which to predict
+        returns.
 
     Returns:
-        pd.DataFrame: _description_
+      pd.DataFrame: The dataframe containing the predicted returns.
     """
     prediction_features = []
     stock_list = list(self.stocks_data.keys())
@@ -308,14 +328,15 @@ class RunBacktest:
   def select_stocks_to_buy(self,
     date_index: int) -> List[str]:
     """
-    _summary_ TODO
+    Predicts the stock returns and selects the stocks to buy
+    based on the given date index.
 
     Args:
-        date_index (int): _description_
-        top_pct (int): _description_
+      date_index (int): The index of the date at which the stocks'
+        performance are predicted and the best stocks are selected.
 
     Returns:
-        List[str]: _description_
+      List[str]: The list of stocks to buy.
     """
     stocks = list(self.stocks_data.keys())
     n_stocks = ceil(len(stocks) * (self.top_pct / 100))
@@ -341,8 +362,8 @@ class RunBacktest:
 
     Returns:
       List[Tuple[str, float]]: The list containing the portfolio. 
-      Each element is a tuple of the stock ticker and the amount of 
-      the stock.
+        Each element is a tuple of the stock ticker and the amount of 
+        the stock.
     """
     aum_per_stock = aum / len(stocks_to_buy)
     stocks_amount = []
@@ -389,7 +410,9 @@ class RunBacktest:
 
   def fill_up_portfolio_performance(self) -> None:
     """
-    None: TODO
+    None: Simulates backtesting based on the user-defined strategies and
+      fills up the dataframe of portfolio performance with the calculated
+      AUM and dividends for each day in the specified time period.
     """
     month_end_idx = self.month_end_indexes[1:]
     for date_index in range(month_end_idx[0], \
