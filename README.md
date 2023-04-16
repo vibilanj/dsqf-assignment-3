@@ -49,10 +49,10 @@ To see the code coverage report, run the following command:
 
 Screenshot of pytest results of the project:
 
-TODO
+![screenshot-2023-04-16-22:41:38](https://user-images.githubusercontent.com/61618719/232320678-3178ae53-d758-46fb-b245-ad3ee802e5f5.png)
 
 Screenshot of code coverage report of the project:
 
-TODO
+![screenshot-2023-04-16-22:42:09](https://user-images.githubusercontent.com/61618719/232320687-6ded09ee-e30b-4d49-a783-56b0762b579e.png)
 
 python -i backtest_two_signal_strategy.py --tickers NFLX,SPY,AMZN,WMT --b 20230101 --e 20230410 --initial_aum 10000 --strategy1_type M --days1 50 --strategy2_type R --days2 5 --top_pct 50 
