@@ -7,9 +7,9 @@ import unittest
 import pytest
 import os.path
 from datetime import date
-from src.stocks_fetcher import StocksFetcher
-from src.run_backtest import RunBacktest, MOMENTUM, REVERSAL
 from src.backtest_stats import BacktestStats
+import pandas as pd
+from dateutil.parser import parse
 
 sys.path.append("/.../src")
 
@@ -17,45 +17,37 @@ class TestBacktestStats(unittest.TestCase):
   """
   Defines the TestBacktestStats class which tests the BacktestStats class.
   """
-  # StockFetcher parameters
-  start_str = "20230101"
-  end_str = "20230410"
-  ticker_1 = "AMZN"
-  ticker_2 = "NFLX"
-  ticker_3 = "SPY"
-  ticker_4 = "WMT"
-  tickers_list = [ticker_1, ticker_2, ticker_3, ticker_4]
-  ticker_obj = StocksFetcher()
-  stocks_data = ticker_obj.fetch_stocks_data(tickers_list, start_str, end_str)
-
-  # RunBacktest parameters
-  initial_aum = 10000
-  strategy1 = MOMENTUM
-  strategy2 = REVERSAL
-  days1 = 50
-  days2 = 5
-  top_pct = 50
-
   def init_backtest_stats(self):
     """
     Tests the BacktestStats class instantiation.
     """
-    run_backtest = RunBacktest(
-      self.stocks_data,
-      self.initial_aum,
-      self.start_str,
-      self.strategy1,
-      self.strategy2,
-      self.days1,
-      self.days2,
-      self.top_pct)
-    run_backtest.fill_up_portfolio_performance()
-    run_backtest.calc_ic()
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    portfolio_performance = pd.read_csv(
+      os.path.join(current_dir, "data", "backtest_stats",
+                   "portfolio_performance.csv"),
+      dtype={"aum": "float64",
+             "dividends": "float64"},
+      parse_dates=["datetime"],
+      date_parser=lambda x: pd.to_datetime(parse(x)))
+
+    monthly_ic = pd.read_csv(os.path.join(
+      current_dir, "data", "backtest_stats", "monthly_ic.csv"),
+      dtype={"ic": "int64"},
+      parse_dates=["datetime"],
+      date_parser=lambda x: pd.to_datetime(parse(x)))
+
+    model_statistics_record = pd.read_csv(
+      os.path.join(current_dir, "data", "backtest_stats",
+                   "model_statistics_record.csv"),
+      dtype={"strategy1_coeff": "float64",
+             "strategy2_coeff": "float64",
+             "strategy1_t": "float64",
+             "strategy2_t": "float64"})
 
     return BacktestStats(
-      run_backtest.portfolio_performance,
-      run_backtest.monthly_ic,
-      run_backtest.model_statistics_record)
+      portfolio_performance,
+      monthly_ic,
+      model_statistics_record)
 
   def test_get_beginning_trading_date_str(self):
     backtest_stats = self.init_backtest_stats()
@@ -68,269 +60,187 @@ class TestBacktestStats(unittest.TestCase):
 
   def test_get_number_of_days(self):
     backtest_stats = self.init_backtest_stats()
-    beginning_trading_date = date(2023, 1, 1)
+    beginning_trading_date = date(2023, 1, 3)
     ending_trading_date = date(2023, 4, 10)
     diff = ending_trading_date - beginning_trading_date
-    self.assertEqual(backtest_stats.get_number_of_days(), diff)
+
+    number_of_days = backtest_stats.get_number_of_days()
+    self.assertIsInstance(number_of_days, int)
+    self.assertEqual(number_of_days, diff.days)
 
   def test_get_initial_aum(self):
     backtest_stats = self.init_backtest_stats()
-    self.assertAlmostEqual(backtest_stats.get_initial_aum(), self.initial_aum)
+    initial_aum = backtest_stats.get_initial_aum()
+    self.assertIsInstance(initial_aum, float)
+    self.assertAlmostEqual(initial_aum, 10000.0)
 
   def test_get_final_aum(self):
     backtest_stats = self.init_backtest_stats()
     final_aum = backtest_stats.get_final_aum()
     self.assertIsInstance(final_aum, float)
-    self.assertAlmostEqual(final_aum, 10088.08542)
+    self.assertAlmostEqual(final_aum, 10088.085424940917)
 
   def test_get_profit_loss(self):
     backtest_stats = self.init_backtest_stats()
     profit_loss = backtest_stats.get_profit_loss()
     self.assertIsInstance(profit_loss, float)
-    self.assertAlmostEqual(profit_loss, 107.09778)
+    self.assertAlmostEqual(profit_loss, 107.09777892942658)
 
   def test_get_total_stock_return(self):
     backtest_stats = self.init_backtest_stats()
     total_stock_return = backtest_stats.get_total_stock_return()
     self.assertIsInstance(total_stock_return, float)
-    self.assertAlmostEqual(total_stock_return, 0.00881)
-
+    self.assertAlmostEqual(total_stock_return, 0.008808542494091671)
 
   def test_get_total_return(self):
     backtest_stats = self.init_backtest_stats()
     total_return = backtest_stats.get_total_return()
     self.assertIsInstance(total_return, float)
-    self.assertAlmostEqual(total_return, 0.01071)
+    self.assertAlmostEqual(total_return, 0.010709777892942658)
 
   def test_get_annualized_rate_of_return(self):
     backtest_stats = self.init_backtest_stats()
     annualized_rate_of_return = backtest_stats.get_annualized_rate_of_return()
     self.assertIsInstance(annualized_rate_of_return, float)
-    self.assertAlmostEqual(annualized_rate_of_return, 0.04133)
+    self.assertAlmostEqual(annualized_rate_of_return, 0.04089967145335871)
 
   def test_get_average_daily_aum(self):
     backtest_stats = self.init_backtest_stats()
     average_daily_aum = backtest_stats.get_average_daily_aum()
     self.assertIsInstance(average_daily_aum, float)
-    self.assertAlmostEqual(average_daily_aum, 9698.81620)
+    self.assertAlmostEqual(average_daily_aum, 9698.81619722861)
 
   def test_get_maximum_daily_aum(self):
     backtest_stats = self.init_backtest_stats()
     maximum_daily_aum = backtest_stats.get_maximum_daily_aum()
     self.assertIsInstance(maximum_daily_aum, float)
-    self.assertAlmostEqual(maximum_daily_aum, 10600.85658)
+    self.assertAlmostEqual(maximum_daily_aum, 10600.856580331776)
 
   def test_get_daily_returns(self):
     backtest_stats = self.init_backtest_stats()
     daily_returns = backtest_stats.get_daily_returns()
     self.assertIsInstance(daily_returns, list)
-    self.assertIsInstance(daily_returns[0], float)
+    daily_returns = [-0.008731629564034208, 0.0, 0.0, 0.0,
+                     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                     0.01510737901850589, 0.06008565803317761,
+                     -0.006527674736961923, -0.057137603026440636,
+                     -0.0026895482902068607, -0.009322606625240119,
+                     -0.028561578543029695, -0.01518912140505129,
+                     0.013677348979776722, 0.016193471082655845,
+                     0.009358591053235634, -0.012995547849090579,
+                     -0.02747414235911976, -0.02925416790979879,
+                     -0.01806428180463718, 0.008365861385941255,
+                     -0.014413140393723997, -0.014196244597490007,
+                     0.0036047215834901997, -0.01990346054427741,
+                     -0.02164393181236096, 0.00456099645336216,
+                     0.0007772559050832411, -0.015659812561862524,
+                     -0.009542354247888804, -0.02468339223990598,
+                     -0.03455758578097156, -0.006270556167904786,
+                     0.007859973650233044, 0.025501870749006717,
+                     0.02765496514856809, 0.0007431420388665299,
+                     0.0016525412089877154, 0.007428693078031061,
+                     -0.02296410363144749, 0.024151956075216946,
+                     0.06489696823790307, 0.02389031953615926,
+                     -0.0011533750051817297, 0.006872305968541893,
+                     0.0301351027584137, 0.03146927698999326,
+                     0.022781317439025197, -0.00162537830500341,
+                     -0.0007636484991237318, 0.012761643954490597,
+                     0.005275078920595299]
+    for exp, act in zip(backtest_stats.get_daily_returns(), daily_returns):
+      self.assertAlmostEqual(exp, act)
 
   def test_get_average_daily_return(self):
     backtest_stats = self.init_backtest_stats()
     average_daily_return = backtest_stats.get_average_daily_return()
     self.assertIsInstance(average_daily_return, float)
-    self.assertAlmostEqual(average_daily_return, 9698.81620)
+    self.assertAlmostEqual(average_daily_return, 0.00032547808103799275)
 
   def test_get_daily_standard_deviation(self):
     backtest_stats = self.init_backtest_stats()
     daily_standard_deviation = backtest_stats.get_daily_standard_deviation()
     self.assertIsInstance(daily_standard_deviation, float)
-    self.assertAlmostEqual(daily_standard_deviation, 0.0193234)
+    self.assertAlmostEqual(daily_standard_deviation, 0.01932344778537147)
 
   def test_get_daily_sharpe_ratio(self):
     backtest_stats = self.init_backtest_stats()
     daily_sharpe_ratio = backtest_stats.get_daily_sharpe_ratio()
     self.assertIsInstance(daily_sharpe_ratio, float)
-    self.assertAlmostEqual(daily_sharpe_ratio, 0.01167)
+    self.assertAlmostEqual(daily_sharpe_ratio, 0.011668625782645662)
 
   def test_get_strategy1_coefficient(self):
     backtest_stats = self.init_backtest_stats()
     strategy1_coefficient = backtest_stats.get_strategy1_coefficient()
     self.assertIsInstance(strategy1_coefficient, float)
-    self.assertAlmostEqual(strategy1_coefficient, 0.05126)
+    self.assertAlmostEqual(strategy1_coefficient, 0.05126014084539502)
 
   def test_get_strategy2_coefficient(self):
     backtest_stats = self.init_backtest_stats()
     strategy2_coefficient = backtest_stats.get_strategy2_coefficient()
     self.assertIsInstance(strategy2_coefficient, float)
-    self.assertAlmostEqual(strategy2_coefficient, -0.77676)
+    self.assertAlmostEqual(strategy2_coefficient, -0.7767555498641575)
 
-  
- 
+  def test_get_strategy1_t_value(self):
+    backtest_stats = self.init_backtest_stats()
+    strategy1_t_value = backtest_stats.get_strategy1_t_value()
+    self.assertIsInstance(strategy1_t_value, float)
+    self.assertAlmostEqual(strategy1_t_value, 0.20960935880946327)
 
+  def test_get_strategy2_t_value(self):
+    backtest_stats = self.init_backtest_stats()
+    strategy2_t_value = backtest_stats.get_strategy2_t_value()
+    self.assertIsInstance(strategy2_t_value, float)
+    self.assertAlmostEqual(strategy2_t_value, -0.597435995779343)
 
-#   def test_get_beginning_trading_date_str(self):
-#     """
-#     Tests the get_beginning_trading_date_str method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertEqual(bts.get_beginning_trading_date_str(),
-#                      "17/12/2020")
+  # Allows us to capture printing to standard output
+  @pytest.fixture(autouse=True)
+  def capsys(self, capsys):
+    self.capsys = capsys
 
-#   def test_get_ending_trading_date_str(self):
-#     """
-#     Tests the get_ending_trading_date_str method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertEqual(bts.get_ending_trading_date_str(),
-#                      "02/03/2021")
-
-#   def test_get_number_days(self):
-#     """
-#     Tests the get_number_of_days method.
-#     """
-#     bts = self.init_backtest_stats()
-#     beginning_trading_date = date(2020, 12, 17)
-#     ending_trading_date = date(2021, 3, 2)
-#     diff = ending_trading_date - beginning_trading_date
-#     self.assertEqual(bts.get_number_of_days(), diff.days)
-
-#   def test_get_initial_aum(self):
-#     """
-#     Tests the get_initial_aum method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertEqual(bts.get_initial_aum(), self.initial_aum)
-
-#   def test_get_final_aum(self):
-#     """
-#     Tests the get_final_aum method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertAlmostEqual(bts.get_final_aum(), 10305.45637, 2)
-
-#   def test_get_profit_loss(self):
-#     """
-#     Tests the get_profit_loss method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertAlmostEqual(bts.get_profit_loss(), 313.68406, 2)
-
-#   def test_get_total_stock_return(self):
-#     """
-#     Tests the get_total_stock_return method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertAlmostEqual(bts.get_total_stock_return(), 0.03055, 3)
-
-#   def test_get_total_return(self):
-#     """
-#     Tests the get_total_return method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertAlmostEqual(bts.get_total_return(), 0.03137, 3)
-
-#   def test_get_annualized_rate_of_return(self):
-#     """
-#     Tests the get_annualized_rate_of_return method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertAlmostEqual(bts.get_annualized_rate_of_return(), 0.16220, 3)
-
-#   def test_get_average_daily_aum(self):
-#     """
-#     Tests the get_average_daily_aum method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertAlmostEqual(bts.get_average_daily_aum(), 10306.71087, 2)
-
-#   def test_get_maximum_daily_aum(self):
-#     """
-#     Tests the get_maximum_daily_aum method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertAlmostEqual(bts.get_maximum_daily_aum(), 10902.82288, 2)
-
-#   def test_get_daily_returns(self):
-#     """
-#     Tests the get_daily_returns method.
-#     """
-#     bts = self.init_backtest_stats()
-#     dr = [-0.029640397582960193, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-#           -0.019922489837307693, -0.009922241610900164, -0.011749927582867048,
-#           0.009537970135655426, 0.04327931329369445, -0.01246580376766709,
-#           -0.029172021587267154, 0.004678976684473441, -0.001470585128347106,
-#           -0.019896438726364568, 0.011441158035954191, 0.06370494885844678,
-#           0.06308392797820443, 0.02910548937188815, 0.02438827515572276,
-#           0.018612059233934584, -0.022923957235919053, -0.03551727576720656,
-#           -0.008493492599531775, 0.014505609856717916, 0.02629137486387206,
-#           -0.0003674471774606418, 0.012521128160366908, 0.021801336006444957,
-#           -0.004836327673704285, 0.004757795014086287, 0.008653537336325725,
-#           -0.0045422098229200404, -0.006438489640713136, -0.007383824429011465,
-#           -0.021281181164778423, -0.02110660948144507, -0.013925446006276805,
-#           -0.027445571084428095, -0.009645725385907305, 0.016304394560859244,
-#           -0.018135447824884576, -0.02295198250639831, 0.021619686633503114,
-#           0.013733150610690529]
-#     for exp, act in zip(bts.get_daily_returns(), dr):
-#       self.assertAlmostEqual(exp, act, 3)
-
-#   def test_get_average_daily_return(self):
-#     """
-#     Tests the get_average_daily_return method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertAlmostEqual(bts.get_average_daily_return(), 0.0009956, 2)
-
-#   def test_get_daily_standard_deviation(self):
-#     """
-#     Tests the get_daily_standard_deviation method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertAlmostEqual(bts.get_daily_standard_deviation(), 0.0212649, 2)
-
-#   def test_get_daily_sharpe_ratio(self):
-#     """
-#     Tests the get_daily_sharpe_ratio method.
-#     """
-#     bts = self.init_backtest_stats()
-#     self.assertAlmostEqual(bts.get_daily_sharpe_ratio(), 0.04212, 2)
-
-#   # Allows us to capture printing to standard output
-#   @pytest.fixture(autouse=True)
-#   def capsys(self, capsys):
-#     self.capsys = capsys
-
-#   def test_print_summary(self):
-#     """Tests the print_summary method."""
-#     out_str = """
-#     Begin Date: 17/12/2020
-#     End Date: 02/03/2021
-#     Number of Days: 75
-#     Total Stock Return: 3.055%
-#     Total Return: 3.137%
-#     Annualized Rate of Return: 16.220%
-#     Initial AUM: 10000.00000
-#     Final AUM: 10305.45721
-#     Average Daily AUM: 10306.71195
-#     Maximum Daily AUM: 10902.82411
-#     Profit and Loss: 313.68634
-#     Average Daily Return: 0.09956%
-#     Daily Standard Deviation: 2.12649%
-#     Daily Sharpe Ratio: 0.04212
+  def test_print_summary(self):
+    """Tests the print_summary method."""
+    out_str = """
+    Begin Date: 03/01/2023
+    End Date: 10/04/2023
+    Number of Days: 97
+    Total Stock Return: 0.881%
+    Total Return: 1.071%
+    Annualized Rate of Return: 4.090%
+    Initial AUM: 10000.00000
+    Final AUM: 10088.08542
+    Average Daily AUM: 9698.81620
+    Maximum Daily AUM: 10600.85658
+    Profit and Loss: 107.09778
+    Average Daily Return: 0.03255%
+    Daily Standard Deviation: 1.93234%
+    Daily Sharpe Ratio: 0.01167
+    Strategy 1 Coefficient: 0.05126
+    Strategy 2 Coefficient: -0.77676
+    Strategy 1 T-Value: 0.20961
+    Strategy 2 T-Value: -0.59744
     
-# """
-#     bts = self.init_backtest_stats()
-#     bts.print_summary()
-#     captured = self.capsys.readouterr()
-#     assert len(captured.out) == len(out_str)
+"""
+    bts = self.init_backtest_stats()
+    bts.print_summary()
+    captured = self.capsys.readouterr()
+    assert len(captured.out) == len(out_str)
 
-#   def test_plot_daily_aum(self):
-#     """
-#     Tests the plot_daily_aum method.
-#     """
-#     bts = self.init_backtest_stats()
-#     bts.plot_daily_aum()
-#     parent_dir = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
-#     expected_path = os.path.join(parent_dir, "daily_aum.png")
-#     self.assertTrue(os.path.isfile(expected_path))
+  def test_plot_daily_aum(self):
+    """
+    Tests the plot_daily_aum method.
+    """
+    bts = self.init_backtest_stats()
+    bts.plot_daily_aum()
+    parent_dir = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+    expected_path = os.path.join(parent_dir, "daily_aum.png")
+    self.assertTrue(os.path.isfile(expected_path))
 
-#   def test_plot_monthly_cumulative_ic(self):
-#     """
-#     Tests the plot_monthly_cumulative_ic method.
-#     """
-#     bts = self.init_backtest_stats()
-#     bts.plot_monthly_cumulative_ic()
-#     parent_dir = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
-#     expected_path = os.path.join(parent_dir, "cumulative_ic.png")
-#     self.assertTrue(os.path.isfile(expected_path))
+  def test_plot_monthly_cumulative_ic(self):
+    """
+    Tests the plot_monthly_cumulative_ic method.
+    """
+    bts = self.init_backtest_stats()
+    bts.plot_monthly_cumulative_ic()
+    parent_dir = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+    expected_path = os.path.join(parent_dir, "cumulative_ic.png")
+    self.assertTrue(os.path.isfile(expected_path))

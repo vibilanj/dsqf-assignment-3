@@ -78,7 +78,8 @@ class BacktestStats:
     int: Returns the number of calendar days from the beginning date
       to the ending date.
     """
-    return (self.ending_trading_date - self.beginning_trading_date).days
+    return (self.ending_trading_date - self.beginning_trading_date)\
+      .round("1d").days
 
   def get_initial_aum(self) -> float:
     """
