@@ -141,10 +141,10 @@ class InputData:
     """
     if self.tickers is None:
       raise ValueError("Tickers must be specified.")
+    if isinstance(self.tickers, int):
+      raise ValueError("Ticker must be a string.")
     tickers = [ticker.strip() for ticker in self.tickers.split(",")]
     for ticker in tickers:
-      if not isinstance(ticker, str):
-        raise ValueError("Ticker must be a string.")
       if not ticker.isalnum():
         raise ValueError(
           "Ticker must be a string of alphanumeric characters.")
@@ -171,7 +171,7 @@ class InputData:
       raise ValueError("Beginning date must be an integer.")
     if len(str(self.b)) != DATE_LENGTH:
       raise ValueError("Beginning date must be in format YYYYMMDD.")
-    if self.b > int(DATE_TODAY):
+    if int(str(self.b)) > int(DATE_TODAY):
       raise ValueError("""
       Beginning date must be less than or equal to the current date.""")
     return str(self.b)
@@ -192,10 +192,10 @@ class InputData:
       return str(DATE_TODAY)
     if len(str(self.e)) != DATE_LENGTH:
       raise ValueError("Ending date must be in format YYYYMMDD.")
-    if self.e < self.b:
+    if int(str(self.e)) < int(str(self.b)):
       raise ValueError("Ending date must be greater than or equal to the "
                         "beginning date.")
-    if self.e > int(DATE_TODAY):
+    if int(str(self.e)) > int(DATE_TODAY):
       raise ValueError("Ending date must be less than or equal to the current "
                         "date.")
     return str(self.e)
@@ -253,7 +253,8 @@ class InputData:
       raise ValueError("Strategy 1 type must be specified.")
     if not isinstance(self.strategy1_type, str):
       raise ValueError("Strategy 1 type must be a string.")
-    if self.strategy1_type != "M" and self.strategy1_type != "R":
+    if self.strategy1_type.upper() != "M" and \
+      self.strategy1_type.upper() != "R":
       raise ValueError("Strategy 1 type must be either 'M' or 'R'.")
     return self.strategy1_type
 
@@ -272,7 +273,8 @@ class InputData:
       raise ValueError("Strategy 2 type must be specified.")
     if not isinstance(self.strategy2_type, str):
       raise ValueError("Strategy 2 type must be a string.")
-    if self.strategy2_type != "M" and self.strategy2_type != "R":
+    if self.strategy2_type.upper() != "M" and \
+      self.strategy2_type.upper() != "R":
       raise ValueError("Strategy 2 type must be either 'M' or 'R'.")
     return self.strategy2_type
 
