@@ -174,4 +174,9 @@ class TestInputData(unittest.TestCase):
       with self.assertRaises(ValueError):
         input_data = InputData(**{**self.default_args, "days2": invalid_days})
         input_data.get_days2()
+  
+  def test_beginning_date_greater_than_today(self):
+    with self.assertRaises(ValueError):
+      input_data = InputData(**{**self.default_args, "b": 99990101})
+      input_data.get_beginning_date()
 
