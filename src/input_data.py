@@ -238,50 +238,80 @@ class InputData:
       raise ValueError("Top percentage must be between 1 to 100.")
     return self.top_pct
 
-  def get_strategy_and_days(self, n: int) -> Tuple[str, int]:
+  def get_strategy1_type(self) -> str:
     """
-    Returns a validated strategy type and number of trading days from
-    the user input for a given strategy (n=1 or n=2).
-
-    Args:
-      n (int): The number of the strategy (1 or 2).
+    Returns a validated strategy type from the user input for strategy 1.
 
     Raises:
       ValueError: If the strategy type is not a string, is not 'M' or 'R',
         or is not a valid strategy type.
+
+    Returns:
+      str: Returns the strategy type if it has been validated.
+    """
+    if self.strategy1_type is None:
+      raise ValueError("Strategy 1 type must be specified.")
+    if not isinstance(self.strategy1_type, str):
+      raise ValueError("Strategy 1 type must be a string.")
+    if self.strategy1_type != "M" and self.strategy1_type != "R":
+      raise ValueError("Strategy 1 type must be either 'M' or 'R'.")
+    return self.strategy1_type
+
+  def get_strategy2_type(self) -> str:
+    """
+    Returns a validated strategy type from the user input for strategy 2.
+
+    Raises:
+      ValueError: If the strategy type is not a string, is not 'M' or 'R',
+        or is not a valid strategy type.
+
+    Returns:
+      str: Returns the strategy type if it has been validated.
+    """
+    if self.strategy2_type is None:
+      raise ValueError("Strategy 2 type must be specified.")
+    if not isinstance(self.strategy2_type, str):
+      raise ValueError("Strategy 2 type must be a string.")
+    if self.strategy2_type != "M" and self.strategy2_type != "R":
+      raise ValueError("Strategy 2 type must be either 'M' or 'R'.")
+    return self.strategy2_type
+
+  def get_days1(self) -> int:
+    """
+    Returns a validated number of trading days from the user input for
+    strategy 1.
+
+    Raises:
       ValueError: If the number of trading days is not an integer, is not
         between 1 to 250, or is not a valid number of trading days.
 
     Returns:
-      Tuple[str, int]: Returns a tuple containing the strategy type and
-        number of trading days if both have been validated.
+      int: Returns the number of trading days if it has been validated.
     """
-    if n != 1 and n != 2:
-      raise ValueError("n must be either 1 or 2.")
-    strategy_key = f"strategy{n}_type"
-    days_key = f"days{n}"
+    if self.days1 is None:
+      raise ValueError("Strategy 1 days must be specified.")
+    if not isinstance(self.days1, int):
+      raise ValueError("Strategy 1 days must be an integer.")
+    if self.days1 < MIN_DAYS or self.days1 > MAX_DAYS:
+      raise ValueError("Strategy 1 days must be between 1 to 250.")
+    return self.days1
 
-    strategy = getattr(self, strategy_key)
-    days = getattr(self, days_key)
+  def get_days2(self) -> int:
+    """
+    Returns a validated number of trading days from the user input for
+    strategy 2.
 
-    if strategy is None:
-      raise ValueError(f"Strategy type for strategy {n} must be specified.")
-    if not isinstance(strategy, str):
-      raise ValueError(f"Strategy type for strategy {n} must be a string.")
-    if strategy.upper() != "M" and strategy.upper() != "R":
-      raise ValueError(
-        f"""Strategy type for strategy {n} must be 'M' (momentum)
-        or 'R' (reversal).""")
+    Raises:
+      ValueError: If the number of trading days is not an integer, is not
+        between 1 to 250, or is not a valid number of trading days.
 
-    if days is None:
-      raise ValueError(f"""Number of trading days for strategy {n}
-        must be specified.""")
-    if not isinstance(days, int):
-      raise ValueError(f"""Number of trading days for strategy {n} must
-        be an integer.""")
-    if days < MIN_DAYS or days > MAX_DAYS:
-      raise ValueError(
-          f"Number of trading days for strategy {n} must be between 1 to 250."
-      )
-
-    return strategy, days
+    Returns:
+      int: Returns the number of trading days if it has been validated.
+    """
+    if self.days2 is None:
+      raise ValueError("Strategy 2 days must be specified.")
+    if not isinstance(self.days2, int):
+      raise ValueError("Strategy 2 days must be an integer.")
+    if self.days2 < MIN_DAYS or self.days2 > MAX_DAYS:
+      raise ValueError("Strategy 2 days must be between 1 to 250.")
+    return self.days2

@@ -51,6 +51,19 @@ class TestInputData(unittest.TestCase):
       "--strategy2_type", "R", "--days1", "100", "--days2", "150", 
       "--top_pct", "l12i2s", "--wrong-stuff"])
 
+  def test_get_args_optional(self) -> None:
+    """
+    Tests the get_args method with optional input.
+    """
+    parser = get_args()
+    args = parser.parse_args(["--tickers", "AAPL,TSLA", "--b", "20220101",
+                              "--initial_aum", "10000", "--strategy1_type",
+                              "M", "--strategy2_type", "R", "--days1", "100",
+                              "--days2", "150", "--top_pct", "20", 
+                              "--optional_arg", "value"])
+    self.assertEqual(args.optional_arg, "value")
+
+
   def setUp(self) -> None:
     """
     This method initialises the TestInputData class.
@@ -101,12 +114,29 @@ class TestInputData(unittest.TestCase):
     """
     self.assertEqual(self.input_data.get_initial_aum(), 10000)
 
-  def test_get_strategy_and_days_valid(self) -> None:
+  def test_get_strategy1_type_valid(self) -> None:
     """
-    This method tests the get_strategy_and_days method.
+    This method tests the get_strategy1_type method.
     """
-    self.assertEqual(self.input_data.get_strategy_and_days(1), ("M", 100))
-    self.assertEqual(self.input_data.get_strategy_and_days(2), ("R", 150))
+    self.assertEqual(self.input_data.get_strategy1_type(), "M")
+
+  def test_get_strategy2_type_valid(self) -> None:
+    """
+    This method tests the get_strategy2_type method.
+    """
+    self.assertEqual(self.input_data.get_strategy2_type(), "R")
+
+  def test_get_days1_valid(self) -> None:
+    """
+    This method tests the get_days1 method.
+    """
+    self.assertEqual(self.input_data.get_days1(), 100)
+
+  def test_get_days2_valid(self) -> None:
+    """
+    This method tests the get_days2 method.
+    """
+    self.assertEqual(self.input_data.get_days2(), 150)
 
   def test_get_top_pct_valid(self) -> None:
     """
@@ -123,7 +153,7 @@ class TestInputData(unittest.TestCase):
     self.wrong_e = "20220228"
     self.wrong_initial_aum = -1000
     self.wrong_strategy1_type = "K"
-    self.wrong_strategy2_type = "R"
+    self.wrong_strategy2_type = "L"
     self.wrong_days1 = "200"
     self.wrong_days2 = 0
     self.wrong_top_pct = 200
@@ -167,13 +197,33 @@ class TestInputData(unittest.TestCase):
     self.set_wrong_data()
     self.assertRaises(ValueError, self.input_data.get_initial_aum)
 
-  def test_get_strategy_and_days_invalid(self) -> None:
+  def test_get_strategy1_type_invalid(self) -> None:
     """
-    This method tests the get_strategy_and_days method with wrong input.
+    This method tests the get_strategy1_type method with wrong input.
     """
     self.set_wrong_data()
-    self.assertRaises(ValueError, self.input_data.get_strategy_and_days, 1)
-    self.assertRaises(ValueError, self.input_data.get_strategy_and_days, 2)
+    self.assertRaises(ValueError, self.input_data.get_strategy1_type)
+
+  def test_get_strategy2_type_invalid(self) -> None:
+    """
+    This method tests the get_strategy2_type method with wrong input.
+    """
+    self.set_wrong_data()
+    self.assertRaises(ValueError, self.input_data.get_strategy2_type)
+
+  def test_get_days1_invalid(self) -> None:
+    """
+    This method tests the get_days1 method with wrong input.
+    """
+    self.set_wrong_data()
+    self.assertRaises(ValueError, self.input_data.get_days1)
+
+  def test_get_days2_invalid(self) -> None:
+    """
+    This method tests the get_days2 method with wrong input.
+    """
+    self.set_wrong_data()
+    self.assertRaises(ValueError, self.input_data.get_days2)
 
   def test_get_top_pct_invalid(self) -> None:
     """
@@ -181,3 +231,6 @@ class TestInputData(unittest.TestCase):
     """
     self.set_wrong_data()
     self.assertRaises(ValueError, self.input_data.get_top_pct)
+
+if __name__ == "__main__":
+  unittest.main()
