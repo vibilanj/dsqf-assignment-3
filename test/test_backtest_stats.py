@@ -36,26 +36,129 @@ class TestBacktestStats(unittest.TestCase):
   days2 = 5
   top_pct = 50
 
-#   def init_backtest_stats(self):
-#     """
-#     Tests the BacktestStats class instantiation.
-#     """
-#     run_backtest = RunBacktest(
-#       self.stocks_data,
-#       self.initial_aum,
-#       self.start_str,
-#       self.strategy1,
-#       self.strategy2,
-#       self.days1,
-#       self.days2,
-#       self.top_pct)
-#     run_backtest.fill_up_portfolio_performance()
-#     run_backtest.calc_ic()
+  def init_backtest_stats(self):
+    """
+    Tests the BacktestStats class instantiation.
+    """
+    run_backtest = RunBacktest(
+      self.stocks_data,
+      self.initial_aum,
+      self.start_str,
+      self.strategy1,
+      self.strategy2,
+      self.days1,
+      self.days2,
+      self.top_pct)
+    run_backtest.fill_up_portfolio_performance()
+    run_backtest.calc_ic()
 
-#     return BacktestStats(
-#       run_backtest.portfolio_performance,
-#       run_backtest.monthly_ic,
-#       run_backtest.model_statistics_record)
+    return BacktestStats(
+      run_backtest.portfolio_performance,
+      run_backtest.monthly_ic,
+      run_backtest.model_statistics_record)
+
+  def test_get_beginning_trading_date_str(self):
+    backtest_stats = self.init_backtest_stats()
+    self.assertEqual(backtest_stats.get_beginning_trading_date_str(),
+      "03/01/2023")
+
+  def test_get_ending_trading_date_str(self):
+    backtest_stats = self.init_backtest_stats()
+    self.assertEqual(backtest_stats.get_ending_trading_date_str(), "10/04/2023")
+
+  def test_get_number_of_days(self):
+    backtest_stats = self.init_backtest_stats()
+    beginning_trading_date = date(2023, 1, 1)
+    ending_trading_date = date(2023, 4, 10)
+    diff = ending_trading_date - beginning_trading_date
+    self.assertEqual(backtest_stats.get_number_of_days(), diff)
+
+  def test_get_initial_aum(self):
+    backtest_stats = self.init_backtest_stats()
+    self.assertAlmostEqual(backtest_stats.get_initial_aum(), self.initial_aum)
+
+  def test_get_final_aum(self):
+    backtest_stats = self.init_backtest_stats()
+    final_aum = backtest_stats.get_final_aum()
+    self.assertIsInstance(final_aum, float)
+    self.assertAlmostEqual(final_aum, 10088.08542)
+
+  def test_get_profit_loss(self):
+    backtest_stats = self.init_backtest_stats()
+    profit_loss = backtest_stats.get_profit_loss()
+    self.assertIsInstance(profit_loss, float)
+    self.assertAlmostEqual(profit_loss, 107.09778)
+
+  def test_get_total_stock_return(self):
+    backtest_stats = self.init_backtest_stats()
+    total_stock_return = backtest_stats.get_total_stock_return()
+    self.assertIsInstance(total_stock_return, float)
+    self.assertAlmostEqual(total_stock_return, 0.00881)
+
+
+  def test_get_total_return(self):
+    backtest_stats = self.init_backtest_stats()
+    total_return = backtest_stats.get_total_return()
+    self.assertIsInstance(total_return, float)
+    self.assertAlmostEqual(total_return, 0.01071)
+
+  def test_get_annualized_rate_of_return(self):
+    backtest_stats = self.init_backtest_stats()
+    annualized_rate_of_return = backtest_stats.get_annualized_rate_of_return()
+    self.assertIsInstance(annualized_rate_of_return, float)
+    self.assertAlmostEqual(annualized_rate_of_return, 0.04133)
+
+  def test_get_average_daily_aum(self):
+    backtest_stats = self.init_backtest_stats()
+    average_daily_aum = backtest_stats.get_average_daily_aum()
+    self.assertIsInstance(average_daily_aum, float)
+    self.assertAlmostEqual(average_daily_aum, 9698.81620)
+
+  def test_get_maximum_daily_aum(self):
+    backtest_stats = self.init_backtest_stats()
+    maximum_daily_aum = backtest_stats.get_maximum_daily_aum()
+    self.assertIsInstance(maximum_daily_aum, float)
+    self.assertAlmostEqual(maximum_daily_aum, 10600.85658)
+
+  def test_get_daily_returns(self):
+    backtest_stats = self.init_backtest_stats()
+    daily_returns = backtest_stats.get_daily_returns()
+    self.assertIsInstance(daily_returns, list)
+    self.assertIsInstance(daily_returns[0], float)
+
+  def test_get_average_daily_return(self):
+    backtest_stats = self.init_backtest_stats()
+    average_daily_return = backtest_stats.get_average_daily_return()
+    self.assertIsInstance(average_daily_return, float)
+    self.assertAlmostEqual(average_daily_return, 9698.81620)
+
+  def test_get_daily_standard_deviation(self):
+    backtest_stats = self.init_backtest_stats()
+    daily_standard_deviation = backtest_stats.get_daily_standard_deviation()
+    self.assertIsInstance(daily_standard_deviation, float)
+    self.assertAlmostEqual(daily_standard_deviation, 0.0193234)
+
+  def test_get_daily_sharpe_ratio(self):
+    backtest_stats = self.init_backtest_stats()
+    daily_sharpe_ratio = backtest_stats.get_daily_sharpe_ratio()
+    self.assertIsInstance(daily_sharpe_ratio, float)
+    self.assertAlmostEqual(daily_sharpe_ratio, 0.01167)
+
+  def test_get_strategy1_coefficient(self):
+    backtest_stats = self.init_backtest_stats()
+    strategy1_coefficient = backtest_stats.get_strategy1_coefficient()
+    self.assertIsInstance(strategy1_coefficient, float)
+    self.assertAlmostEqual(strategy1_coefficient, 0.05126)
+
+  def test_get_strategy2_coefficient(self):
+    backtest_stats = self.init_backtest_stats()
+    strategy2_coefficient = backtest_stats.get_strategy2_coefficient()
+    self.assertIsInstance(strategy2_coefficient, float)
+    self.assertAlmostEqual(strategy2_coefficient, -0.77676)
+
+  
+ 
+
 
 #   def test_get_beginning_trading_date_str(self):
 #     """
