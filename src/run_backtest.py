@@ -27,7 +27,7 @@ STRATEGY1_RETURN = "strategy1_return"
 STRATEGY2_RETURN = "strategy2_return"
 ACTUAL_RETURN = "actual_return"
 PREDICTED_RETURN = "predicted_return"
- 
+
 # Model Statistics Constants
 STRATEGY1_COEFF = "strategy1_coeff"
 STRATEGY2_COEFF = "strategy2_coeff"
@@ -88,8 +88,16 @@ class RunBacktest:
     self.portfolio: List[Tuple[str, float]] = []
     self.portfolio_record: List[List[Tuple[str, float]]] = []
     self.monthly_ic: pd.DataFrame = pd.DataFrame()
-    self.model_training_data: pd.DataFrame = pd.DataFrame(columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN, ACTUAL_RETURN])
-    self.model_statistics_record: pd.DataFrame = pd.DataFrame(columns=[STRATEGY1_COEFF, STRATEGY2_COEFF, STRATEGY1_T, STRATEGY2_T])
+    self.model_training_data: pd.DataFrame = \
+      pd.DataFrame(columns=[STOCK,
+                            STRATEGY1_RETURN,
+                            STRATEGY2_RETURN,
+                            ACTUAL_RETURN])
+    self.model_statistics_record: pd.DataFrame = \
+      pd.DataFrame(columns=[STRATEGY1_COEFF,
+                            STRATEGY2_COEFF,
+                            STRATEGY1_T,
+                            STRATEGY2_T])
 
   def get_month_end_indexes_from_b(self) -> List[int]:
     """
@@ -108,9 +116,10 @@ class RunBacktest:
           datetime_indexes[idx].tz_localize(None) > b_timestamp:
           first_index_after_b = idx
 
-    return month_end_indexes[idx - 1:]
-  
-  def get_feature(self, 
+    first_index_after_b = month_end_indexes.index(first_index_after_b)
+    return month_end_indexes[first_index_after_b - 1:]
+
+  def get_feature(self,
     stock: str,
     strategy: str,
     days: int,
@@ -134,7 +143,7 @@ class RunBacktest:
     end_close = history.iloc[date_index][CLOSE_PRICE]
     start_close = history.iloc[date_index - days][CLOSE_PRICE]
     return (end_close - start_close) / start_close * 100
-  
+
   def get_label(self,
     stock: str,
     date_index: int) -> float:
@@ -149,12 +158,13 @@ class RunBacktest:
         float: _description_
     """
     month_end_indexes = self.get_month_end_indexes_from_b()
-    previous_month_index = month_end_indexes[month_end_indexes.index(date_index) - 1]
-    
+    previous_month_index = \
+      month_end_indexes[month_end_indexes.index(date_index) - 1]
+
     history = self.stocks_data[stock]
     end_close = history.iloc[date_index][CLOSE_PRICE]
     start_close = history.iloc[previous_month_index][CLOSE_PRICE]
-    return (end_close - start_close) / start_close * 100 
+    return (end_close - start_close) / start_close * 100
 
   def update_monthly_training_data(self,
     date_index: int) -> None:
@@ -165,23 +175,32 @@ class RunBacktest:
         date_index (int): _description_
     """
     month_end_indexes = self.get_month_end_indexes_from_b()
-    previous_month_index = month_end_indexes[month_end_indexes.index(date_index) - 1]
+    previous_month_index = \
+      month_end_indexes[month_end_indexes.index(date_index) - 1]
 
     training_data_block = []
     stock_list = list(self.stocks_data.keys())
     for stock in stock_list:
-      strategy1_return = self.get_feature(stock, self.strategy1, self.days1, previous_month_index)
-      strategy2_return = self.get_feature(stock, self.strategy2, self.days2, previous_month_index)
+      strategy1_return = self.get_feature(
+        stock,
+        self.strategy1,
+        self.days1, 
+        previous_month_index)
+      strategy2_return = self.get_feature(
+        stock,
+        self.strategy2,
+        self.days2,
+        previous_month_index)
       actual_return = self.get_label(stock, date_index)
       training_data_block.append([stock, strategy1_return, strategy2_return, actual_return])
-    
+
     training_data_df = pd.DataFrame(training_data_block, 
                                     columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN, ACTUAL_RETURN])
     self.model_training_data = pd.concat([self.model_training_data, training_data_df], ignore_index=True)
 
   def store_model_statistics(self,
-    X: pd.DataFrame, 
-    y: pd.Series, 
+    X: pd.DataFrame,
+    y: pd.Series,
     model: LinearRegression) -> None:
     """
     _summary_ TODO
@@ -193,17 +212,24 @@ class RunBacktest:
 
     n_samples, n_predictors = X.shape
     residuals = y - model.predict(X)
-    residual_std_error = np.sqrt(np.sum(residuals ** 2) / (n_samples - n_predictors - 1))
+    residual_std_error = np.sqrt(np.sum(residuals ** 2) / \
+                                 (n_samples - n_predictors - 1))
 
     X_design = np.concatenate([np.ones((n_samples, 1)), X], axis=1)
     design_matrix_inv = np.linalg.inv(np.dot(X_design.T, X_design))
-    standard_errors = np.sqrt(np.diagonal(design_matrix_inv)) * residual_std_error
-    t_values = coefficients / standard_errors[1:]  
+    standard_errors = np.sqrt(np.diagonal(design_matrix_inv))\
+      * residual_std_error
+    t_values = coefficients / standard_errors[1:]
 
     statistics = np.concatenate((coefficients, t_values))
-    statistics_df = pd.DataFrame(statistics.reshape(1, -1), columns=[STRATEGY1_COEFF, STRATEGY2_COEFF, STRATEGY1_T, STRATEGY2_T])
-    self.model_statistics_record = pd.concat([self.model_statistics_record, statistics_df])
-
+    statistics_df = \
+      pd.DataFrame(statistics.reshape(1, -1),
+                   columns=[STRATEGY1_COEFF,
+                            STRATEGY2_COEFF,
+                            STRATEGY1_T,
+                            STRATEGY2_T])
+    self.model_statistics_record = \
+      pd.concat([self.model_statistics_record, statistics_df])
 
   def fit_model_and_store_statistics(self) -> LinearRegression:
     """
@@ -307,38 +333,6 @@ class RunBacktest:
     self.portfolio_performance[DIVIDENDS_DF] = \
       [0 for _ in range(len(datetime_indexes))]
 
-  def fill_up_portfolio_performance(self) -> None:
-    self.init_portfolio_performance()
-    month_end_indexes = self.get_month_end_indexes_from_b()[1:]
-    for date_index in range(month_end_indexes[0], \
-                            len(list(self.stocks_data.values())[0].index)):
-      # updating portfolio performance by each row
-      self.portfolio_performance.at[date_index, AUM] = self.calc_aum(date_index)
-      self.portfolio_performance.at[date_index, DIVIDENDS_DF] = \
-        self.portfolio_performance.at[date_index - 1, DIVIDENDS_DF] \
-          + self.calc_dividends(date_index)
-
-      # rebalance and store new portfolio
-      if date_index in month_end_indexes:
-        stocks_to_buy = self.select_stocks_to_buy(date_index)
-        self.portfolio = self.calc_portfolio(
-          stocks_to_buy,
-          self.portfolio_performance.iloc[date_index][AUM],
-          date_index)
-        self.portfolio_record.append(self.portfolio)
-
-    # cut portfolio performance to only start from beginning date
-    datetime_indexes = self.portfolio_performance[DATETIME].to_list()
-    b_idx = None
-    for idx, datetime in enumerate(datetime_indexes):
-      if datetime.tz_localize(None) >= \
-        pd.to_datetime(self.beginning_date, format=DATE_FORMAT):
-        b_idx = idx
-        break
-    self.portfolio_performance = \
-      self.portfolio_performance[b_idx:].reset_index(drop=True)
-
-
   def calc_aum(self, date_index: int) -> float:
     """
     Calculates the assets under management amount for a given date.
@@ -372,6 +366,44 @@ class RunBacktest:
       dividends = self.stocks_data[stock].iloc[date_index][DIVIDENDS]
       total_dividends += amount * dividends
     return total_dividends
+
+  def fill_up_portfolio_performance(self) -> None:
+    """
+    None: TODO
+    """
+    self.init_portfolio_performance()
+    month_end_indexes = self.get_month_end_indexes_from_b()[1:]
+    for date_index in range(month_end_indexes[0], \
+                            len(list(self.stocks_data.values())[0].index)):
+      # updating portfolio performance by each row
+      if date_index == month_end_indexes[0]:
+        self.portfolio_performance.at[date_index, AUM] = self.initial_aum
+      else:
+        self.portfolio_performance.at[date_index, AUM] = self.calc_aum(date_index)
+      
+      self.portfolio_performance.at[date_index, DIVIDENDS_DF] = \
+        self.portfolio_performance.at[date_index - 1, DIVIDENDS_DF] \
+          + self.calc_dividends(date_index)
+
+      # rebalance and store new portfolio
+      if date_index in month_end_indexes:
+        stocks_to_buy = self.select_stocks_to_buy(date_index)
+        self.portfolio = self.calc_portfolio(
+          stocks_to_buy,
+          self.portfolio_performance.iloc[date_index][AUM],
+          date_index)
+        self.portfolio_record.append(self.portfolio)
+
+    # cut portfolio performance to only start from beginning date
+    datetime_indexes = self.portfolio_performance[DATETIME].to_list()
+    b_idx = None
+    for idx, datetime in enumerate(datetime_indexes):
+      if datetime.tz_localize(None) >= \
+        pd.to_datetime(self.beginning_date, format=DATE_FORMAT):
+        b_idx = idx
+        break
+    self.portfolio_performance = \
+      self.portfolio_performance[b_idx:].reset_index(drop=True)
 
   def calc_ic(self) -> None:
     """

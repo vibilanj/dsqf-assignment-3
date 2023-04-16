@@ -59,7 +59,7 @@ class BacktestStats:
     self.ending_trading_date: pd.Timestamp = \
       list(self.portfolio_performance[DATETIME])[-1]
     self.latest_model_statistics: List[float] = \
-      self.model_statistics.values().tolist()[-1]
+      self.model_statistics.values.tolist()[-1]
 
   def get_beginning_trading_date_str(self) -> str:
     """
