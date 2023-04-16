@@ -6,7 +6,6 @@ import sys
 import unittest
 from src.run_backtest import *
 import pandas as pd
-import os
 
 sys.path.append("/.../src")
 
@@ -20,7 +19,6 @@ class TestRunBacktest(unittest.TestCase):
   Defines the TestRunBacktest class which tests the RunBacktest class.
   """
 
-
   tickers = [AMZN, NFLX, SPY, WMT]
 
   # RunBacktest parameters
@@ -32,7 +30,7 @@ class TestRunBacktest(unittest.TestCase):
   days1 = 50
   days2 = 5
   top_pct = 50
-  path = "./test/data/"
+  path = "./test/data/run_backtest/"
   stocks_data = dict()
   for ticker in tickers:
     stock_data = pd.read_csv(path + ticker + ".csv", parse_dates=["Date"], index_col="Date")
