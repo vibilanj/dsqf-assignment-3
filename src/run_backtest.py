@@ -156,7 +156,7 @@ class RunBacktest:
     start_close = history.iloc[previous_month_index][CLOSE_PRICE]
     return (end_close - start_close) / start_close * 100 
 
-  def get_monthly_training_data(self,
+  def update_monthly_training_data(self,
     date_index: int) -> None:
     """
     _summary_ TODO
@@ -205,7 +205,7 @@ class RunBacktest:
     self.model_statistics_record = pd.concat([self.model_statistics_record, statistics_df])
 
 
-  def fit_model(self) -> LinearRegression:
+  def fit_model_and_store_statistics(self) -> LinearRegression:
     """
     _summary_ TODO
 
@@ -238,9 +238,10 @@ class RunBacktest:
       strategy1_return = self.get_feature(stock, self.strategy1, self.days1, date_index)
       strategy2_return = self.get_feature(stock, self.strategy2, self.days2, date_index)
       prediction_features.append([stock, strategy1_return, strategy2_return])
-    prediction_features_df = pd.Dateframe(prediction_features, columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN])
+    prediction_features_df = pd.DataFrame(prediction_features, columns=[STOCK, STRATEGY1_RETURN, STRATEGY2_RETURN])
 
-    model = self.fit_model()    
+    self.update_monthly_training_data(date_index)
+    model = self.fit_model_and_store_statistics()    
     X_new = prediction_features_df[[STRATEGY1_RETURN, STRATEGY2_RETURN]]
     y_pred = pd.Series(model.predict(X_new), name=PREDICTED_RETURN)
     predicted_returns = pd.concat([prediction_features_df[STOCK], y_pred], axis=1)
