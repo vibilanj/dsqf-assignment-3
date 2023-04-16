@@ -23,7 +23,7 @@ To backtest a linear combination of 1) momentum strategy with 60 days, and 2) re
 
 To backtest a linear combination of 1) reversal strategy with 10 days, and 2) momentum strategy with 40 days, with an initial AUM of 10000, and on the top 20% of the stock universe containing AAPL, TSLA, LMT, BA, GOOG, AMZN, NVDA, META, WMT, MCD from June 1, 2022 to today run the following: 
 
-* `python backtest_strategy.py --tickers AAPL,TSLA,LMT,BA,GOOG,AMZN,NVDA,META,WMT,MCD --b 20220601 --initial_aum 10000 --strategy1_type R --days1 10 --strategy2_type M --days2 40 --top_pct 20`
+* `python backtest_two_signal_strategy.py --tickers AAPL,TSLA,LMT,BA,GOOG,AMZN,NVDA,META,WMT,MCD --b 20220601 --initial_aum 10000 --strategy1_type R --days1 10 --strategy2_type M --days2 40 --top_pct 20`
 
 ### Note
 
@@ -55,4 +55,3 @@ Screenshot of code coverage report of the project:
 
 ![screenshot-2023-04-16-22:42:09](https://user-images.githubusercontent.com/61618719/232320687-6ded09ee-e30b-4d49-a783-56b0762b579e.png)
 
-python -i backtest_two_signal_strategy.py --tickers NFLX,SPY,AMZN,WMT --b 20230101 --e 20230410 --initial_aum 10000 --strategy1_type M --days1 50 --strategy2_type R --days2 5 --top_pct 50 
